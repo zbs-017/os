@@ -66,6 +66,12 @@ $(BUILD)/%.img: $(BUILD)/boot/boot.bin \
 bochs: $(BUILD)/master.img
 	bochs -q
 
+qemu: $(BUILD)/master.img
+	qemu-system-i386 -hda $<
+
+qemug: $(BUILD)/master.img
+	qemu-system-i386 -S -s -hda $<
+
 clean:
 	rm -rf $(BUILD)
 
