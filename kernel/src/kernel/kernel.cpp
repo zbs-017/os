@@ -1,13 +1,21 @@
 #include <os/os.h>
+#include <os/io.h>
 
-int magic = OS_MAGIC;
+#define CRT_ADDR 0x3d4
+#define CRT_DATA 0x3d5
+#define CRT_CURS_H 0xe
+#define CRT_CURS_L 0xf
 
 extern "C" void kernel_init() {
-    char* video = (char*) 0xB8000;
-    const char* hello = "Hello Kernel!";
+    /* 测试 io 输入和输出 */
+    outb(CRT_ADDR, CRT_CURS_H);
+    outb(CRT_DATA, 0);
+    outb(CRT_ADDR, CRT_CURS_L);
+    outb(CRT_DATA, 240);
 
-    for (int i = 0; i < 13; i++) {
-        video[2 * i] = hello[i];
-        video[2 * i + 1] = 0x07;
-    }
+    int pos = 0;
+    outb(CRT_ADDR, CRT_CURS_L);
+    pos = inb(CRT_DATA);
+    outb(CRT_ADDR, CRT_CURS_H);
+    pos |= inb(CRT_DATA) << 8;
 }
