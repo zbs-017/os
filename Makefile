@@ -26,6 +26,7 @@ DEBUG = -g
 KERNELFILES = $(BUILD)/kernel/start.o \
 				$(BUILD)/kernel/kernel.o \
 				$(BUILD)/kernel/io.o \
+				$(BUILD)/lib/string.o \
 
 all: $(BUILD)/master.img $(BUILD)/system.map
 
