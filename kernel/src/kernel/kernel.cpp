@@ -1,4 +1,8 @@
-extern "C" void kernel_main() {
+#include <os/os.h>
+
+int magic = OS_MAGIC;
+
+extern "C" void kernel_init() {
     char* video = (char*) 0xB8000;
     const char* hello = "Hello Kernel!";
 

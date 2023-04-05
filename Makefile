@@ -11,9 +11,17 @@ CRTBEGIN_O := $(shell $(CC) $(CXXFLAGS) -print-file-name=crtbegin.o)
 CRTEND_O := $(shell $(CC) $(CXXFLAGS) -print-file-name=crtend.o)
 START_OBJ := $(BUILD)/boot/crti.o $(CRTBEGIN_O)
 END_OBJ := $(CRTEND_O) $(BUILD)/boot/crtn.o
-CXXFLAGS ?= -g -std=gnu++14 -ffreestanding -fno-exceptions -fno-rtti -Wall -Wextra
+CXXFLAGS ?= -std=gnu++14 \
+			-ffreestanding \
+			-fno-exceptions \
+			-fno-rtti \
+			-Wall -Wextra \
+			-fno-pic \
+			-fno-pie \
+			-fno-stack-protector
 CPPFLAGS += -I kernel/include 
 LDFLAGS += -static
+DEBUG = -g
 
 KERNELFILES = $(BUILD)/kernel/start.o \
 				$(BUILD)/kernel/kernel.o
@@ -22,15 +30,15 @@ all: $(BUILD)/master.img $(BUILD)/system.map
 
 $(BUILD)/%.bin: $(SRC)/%.asm
 	@mkdir -p $(dir $@)
-	nasm -f bin $< -o $@
+	nasm -f bin $(DEBUG) $< -o $@
 
 $(BUILD)/%.o: $(SRC)/%.asm
 	@mkdir -p $(dir $@)
-	nasm -f elf32 $< -o $@
+	nasm -f elf32 $(DEBUG) $< -o $@
 
 $(BUILD)/%.o: $(SRC)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) $(DEBUG) -c $< -o $@
 
 $(BUILD)/kernel.bin:    $(BUILD)/boot/crti.o \
 						$(BUILD)/boot/crtn.o \
