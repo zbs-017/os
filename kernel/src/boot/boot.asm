@@ -14,19 +14,29 @@ mov sp, 0x7c00
 mov si, bootingMsg
 call print
 
-xchg bx, bx
-
-mov ebx, 0
-mov edi, 0x1000
-mov cx, 1
+; 将 loader 读入内存
+mov ebx, 2      ; 起始扇区位置
+mov edi, 0x1000 ; 内存位置
+mov cx, 4       ; 扇区数量
 .read_loader:
     call read_disk
+    inc ebx
     loop .read_loader
 
-xchg bx, bx
+cmp word [0x1000], 0x55aa
+jnz error
+
+jmp 0:0x1002
 
 ; 阻塞
 jmp $
+
+error:
+    mov si, .msg
+    call print
+    hlt
+    jmp $
+    .msg db "Botting ERROR! Can not found Loader!", 13, 10, 0
 
 read_disk:
     ; 参数：
@@ -36,7 +46,6 @@ read_disk:
     push eax
     push ebx
     push edx
-    push edi
     push ecx
 
     ; 初始化硬盘
@@ -86,7 +95,6 @@ read_disk:
         loop .read_word
 
     pop ecx
-    pop edi
     pop edx
     pop ebx
     pop eax
