@@ -51,7 +51,6 @@ prepare_protected_mode:
     out 0x92, al
 
 ; 内核加载器重要功能2：加载 GDT
-    xchg bx, bx
     lgdt [gdt_ptr]; 加载 gdt
 
 ; 内核加载器重要功能2：启动保护模式
@@ -90,7 +89,6 @@ detectingMsg:
 
 [bits 32]
 protect_mode:
-    xchg bx, bx
     
     ; 初始化段寄存器
     mov ax, data_selector
@@ -104,10 +102,82 @@ protect_mode:
 
     mov byte [0xb8000], 'P'
 
-    mov byte [0x200000], 'P'
-    xchg bx, bx
+    ; 读取内核
+    mov ebx, 10
+    mov edi, 0x10000
+    mov cx, 200
+    .read_kernel:
+        call read_disk
+        inc ebx
+        loop .read_kernel
+    ; 进入内核
+    jmp dword code_selector:0x10000
 
-    jmp $
+    ; 出错
+    ud2
+
+read_disk:
+    ; 参数：
+    ;   - ebx: 硬盘的起始扇区
+    ;   - edi: 存放到内存中的位置
+
+    push eax
+    push ebx
+    push edx
+    push ecx
+
+    ; 初始化硬盘
+    mov dx, 0x1f2
+    mov al, 1  ; 一次只能读取一个扇区
+    out dx, al
+
+    inc dx; 0x1f3
+    mov al, bl
+    out dx, al
+    shr ebx, 8
+
+    inc dx; 0x1f4
+    mov al, bl
+    out dx, al
+    shr ebx, 8
+
+    inc dx; 0x1f5
+    mov al, bl
+    out dx, al
+    shr ebx, 8
+
+    inc dx; 0x1f6
+    mov al, bl
+    and al, 0x0f
+    or al, 0b1110_0000  ; 主盘，LBA 模式
+    out dx, al
+
+    inc dx; 0x1f7
+    mov al, 0x20
+    out dx, al  ; 读硬盘
+
+    xor ecx, ecx
+    mov cx, 256  ; 每次读取一个字（16bit)，读 256 次正好一个扇区
+    .wait:
+        mov dx, 0x1f7
+        in al, dx
+        and al, 0b1000_1000  ; 不关心出错的情况
+        cmp al, 0b0000_1000  ; 数据准备完毕且硬盘空闲
+        jnz .wait
+    .read_word:
+        ; 数据准备完毕，可以读取
+        mov dx, 0x1f0
+        in ax, dx
+        mov [edi], ax
+        add edi, 2
+        loop .read_word
+
+    pop ecx
+    pop edx
+    pop ebx
+    pop eax
+
+    ret
 
 ; 段选择子
 code_selector equ (1 << 3)

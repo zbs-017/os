@@ -90,8 +90,8 @@ read_disk:
         ; 数据准备完毕，可以读取
         mov dx, 0x1f0
         in ax, dx
-        mov [di], ax
-        add di, 2
+        mov [edi], ax
+        add edi, 2
         loop .read_word
 
     pop ecx

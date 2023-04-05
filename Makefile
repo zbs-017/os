@@ -1,16 +1,43 @@
 SRC = kernel/src
 BUILD = build
 
-all: $(BUILD)/master.img
+# 指定入口地址，内核开始的位置
+ENTRY = 0x10000
+
+# 使用交叉编译器
+CC = /home/zbs/dennix-toolchain/bin/i686-dennix-g++
+LD = /home/zbs/dennix-toolchain/bin/i686-dennix-ld
+
+all: $(BUILD)/master.img $(BUILD)/system.map
 
 $(BUILD)/%.bin: $(SRC)/%.asm
 	@mkdir -p $(dir $@)
 	nasm -f bin $< -o $@
 
-$(BUILD)/%.img: $(BUILD)/boot/boot.bin $(BUILD)/boot/loader.bin
+$(BUILD)/%.o: $(SRC)/%.asm
+	@mkdir -p $(dir $@)
+	nasm -f elf32 $< -o $@
+
+$(BUILD)/kernel.bin: $(BUILD)/kernel/start.o
+	@mkdir -p $(dir $@)
+	$(LD) -static $^ -o $@ -Ttext $(ENTRY)
+
+# 提前对 elf 文件进行处理
+$(BUILD)/system.bin: $(BUILD)/kernel.bin
+	objcopy -O binary $< $@
+
+# 生成 kernel 的符号表
+$(BUILD)/system.map: $(BUILD)/kernel.bin
+	nm $< | sort > $@
+
+$(BUILD)/%.img: $(BUILD)/boot/boot.bin \
+				$(BUILD)/boot/loader.bin \
+				$(BUILD)/system.bin
 	yes | bximage -q -hd=16 -func=create -sectsize=512 -imgmode=flat $@
 	dd if=$(BUILD)/boot/boot.bin of=$@ bs=512 count=1 conv=notrunc
 	dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 seek=2 count=4 conv=notrunc
+# 将内核二进制文件写入硬盘
+	dd if=$(BUILD)/system.bin of=$@ bs=512 seek=10 count=200 conv=notrunc
 
 bochs: $(BUILD)/master.img
 	bochs -q
@@ -19,3 +46,5 @@ clean:
 	rm -rf $(BUILD)
 
 .PHONY: clean bochs
+
+test: $(BUILD)/kernel.bin
