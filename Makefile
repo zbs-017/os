@@ -7,6 +7,16 @@ ENTRY = 0x10000
 # 使用交叉编译器
 CC = /home/zbs/dennix-toolchain/bin/i686-dennix-g++
 LD = /home/zbs/dennix-toolchain/bin/i686-dennix-ld
+CRTBEGIN_O := $(shell $(CC) $(CXXFLAGS) -print-file-name=crtbegin.o)
+CRTEND_O := $(shell $(CC) $(CXXFLAGS) -print-file-name=crtend.o)
+START_OBJ := $(BUILD)/boot/crti.o $(CRTBEGIN_O)
+END_OBJ := $(CRTEND_O) $(BUILD)/boot/crtn.o
+CXXFLAGS ?= -g -std=gnu++14 -ffreestanding -fno-exceptions -fno-rtti -Wall -Wextra
+CPPFLAGS += -I kernel/include 
+LDFLAGS += -static
+
+KERNELFILES = $(BUILD)/kernel/start.o \
+				$(BUILD)/kernel/kernel.o
 
 all: $(BUILD)/master.img $(BUILD)/system.map
 
@@ -18,9 +28,15 @@ $(BUILD)/%.o: $(SRC)/%.asm
 	@mkdir -p $(dir $@)
 	nasm -f elf32 $< -o $@
 
-$(BUILD)/kernel.bin: $(BUILD)/kernel/start.o
+$(BUILD)/%.o: $(SRC)/%.cpp
 	@mkdir -p $(dir $@)
-	$(LD) -static $^ -o $@ -Ttext $(ENTRY)
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+
+$(BUILD)/kernel.bin:    $(BUILD)/boot/crti.o \
+						$(BUILD)/boot/crtn.o \
+						$(KERNELFILES)
+	@mkdir -p $(dir $@)
+	$(LD) $(LDFLAGS) $(KERNELFILES) -o $@ -Ttext $(ENTRY)
 
 # 提前对 elf 文件进行处理
 $(BUILD)/system.bin: $(BUILD)/kernel.bin
@@ -45,6 +61,6 @@ bochs: $(BUILD)/master.img
 clean:
 	rm -rf $(BUILD)
 
-.PHONY: clean bochs
-
 test: $(BUILD)/kernel.bin
+
+.PHONY: clean bochs test
