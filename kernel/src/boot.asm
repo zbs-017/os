@@ -11,6 +11,8 @@ mov es, ax
 mov ss, ax
 mov sp, 0x7c00
 
+xchg bx, bx
+
 mov ax, 0xb800
 mov ds, ax
 mov byte [0], 'H'
