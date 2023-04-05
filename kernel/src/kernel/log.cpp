@@ -197,7 +197,7 @@ int Log::vsprintf(char *buf, const char *fmt, va_list args)
         // 下面取得格式指示字符串中的标志域，并将标志常量放入 flags 变量中
         flags = 0;
     repeat:
-        // 掉过第一个 %
+        // 跳过第一个 %
         ++fmt;
         switch (*fmt)
         {

@@ -28,6 +28,7 @@ KERNELFILES = $(BUILD)/kernel/start.o \
 				$(BUILD)/kernel/io.o \
 				$(BUILD)/kernel/console.o \
 				$(BUILD)/kernel/log.o \
+				$(BUILD)/kernel/assert.o \
 				$(BUILD)/lib/string.o \
 
 all: $(BUILD)/master.img $(BUILD)/system.map

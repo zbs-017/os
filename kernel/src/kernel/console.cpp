@@ -157,23 +157,28 @@ void Console::write(char* buf, u32 count) {
             break;
         case ASCII_BS:
             command_bs();
+            ptr = (char*) pos;
             break;
         case ASCII_HT:
             break;
         case ASCII_LF:
             command_lf();
             command_cr();
+            ptr = (char*) pos;
             break;
         case ASCII_VT:
             break;
         case ASCII_FF:
             command_lf();
+            ptr = (char*) pos;
             break;
         case ASCII_CR:
             command_cr();
+            ptr = (char*) pos;
             break;
         case ASCII_DEL:
             command_del();
+            ptr = (char*) pos;
             break;
         default:
             if (x >= WIDTH)
