@@ -21,6 +21,3 @@ print:
 
 loadingMsg:
     db "Loading ...", 13, 10, 0  ; /n/r
-
-; 测试是否读入了 4 个扇区
-times (512 - ($ - $$) + 0x200 * 3) db 0x10
