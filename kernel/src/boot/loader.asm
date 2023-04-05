@@ -40,18 +40,27 @@ detect_memory:
     mov si, detectingMsg
     call print
 
-    xchg bx, bx
+    jmp prepare_protected_mode
 
-    mov cx, [ards_count]
-    mov si, 0
-    ; 查看内存信息
-    .show:
-        mov eax, [si + ards_buffer]       ; 内存基地址
-        mov ebx, [si + ards_buffer + 8]   ; 内存长度
-        mov edx, [si + ards_buffer + 16]  ; 内存类型
-        add si, 20
-        xchg bx, bx
-        loop .show
+prepare_protected_mode:
+    ; 关闭中断
+    cli
+    ; 打开 A20 线
+    in al,  0x92
+    or al, 0b10
+    out 0x92, al
+
+; 内核加载器重要功能2：加载 GDT
+    xchg bx, bx
+    lgdt [gdt_ptr]; 加载 gdt
+
+; 内核加载器重要功能2：启动保护模式
+    mov eax, cr0
+    or eax, 1
+    mov cr0, eax
+
+    ; 用跳转来刷新缓存，启用保护模式
+    jmp dword code_selector:protect_mode
 
 jmp $
 
@@ -78,6 +87,61 @@ loadingMsg:
     db "Loading ...", 13, 10, 0  ; /n/r
 detectingMsg:
     db "Detecting Memory Success ...", 13, 10, 0  ; /n/r
+
+[bits 32]
+protect_mode:
+    xchg bx, bx
+    
+    ; 初始化段寄存器
+    mov ax, data_selector
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    mov esp, 0x10000  ; 修改栈顶，内核系统在上，栈在下，互不干扰
+
+    mov byte [0xb8000], 'P'
+
+    mov byte [0x200000], 'P'
+    xchg bx, bx
+
+    jmp $
+
+; 段选择子
+code_selector equ (1 << 3)
+data_selector equ (2 << 3)
+
+; GDT
+; 内存开始的位置：基地址
+memory_base equ 0
+; 内存界限 4G / 4K - 1
+memory_limit equ ((1024 * 1024 * 1024 * 4) / (1024 * 4)) - 1
+gdt_ptr:
+    dw (gdt_end - gdt_base) - 1
+    dd gdt_base
+gdt_base:
+    dd 0, 0; NULL 描述符
+gdt_code:  ; 4GB 代码段
+    dw memory_limit & 0xffff; 段界限 0 ~ 15 位
+    dw memory_base & 0xffff; 基地址 0 ~ 15 位
+    db (memory_base >> 16) & 0xff; 基地址 16 ~ 23 位
+    ; 存在 - dlp 0 - S _ 代码 - 非依从 - 可读 - 没有被访问过
+    db 0b_1_00_1_1_0_1_0;
+    ; 4k - 32 位 - 不是 64 位 - 段界限 16 ~ 19
+    db 0b1_1_0_0_0000 | (memory_limit >> 16) & 0xf;
+    db (memory_base >> 24) & 0xff; 基地址 24 ~ 31 位
+gdt_data:  ; 4GB 数据段
+    dw memory_limit & 0xffff; 段界限 0 ~ 15 位
+    dw memory_base & 0xffff; 基地址 0 ~ 15 位
+    db (memory_base >> 16) & 0xff; 基地址 16 ~ 23 位
+    ; 存在 - dlp 0 - S _ 数据 - 向上 - 可写 - 没有被访问过
+    db 0b_1_00_1_0_0_1_0;
+    ; 4k - 32 位 - 不是 64 位 - 段界限 16 ~ 19
+    db 0b1_1_0_0_0000 | (memory_limit >> 16) & 0xf;
+    db (memory_base >> 24) & 0xff; 基地址 24 ~ 31 位
+gdt_end:
 
 ards_count:
     dw 0
