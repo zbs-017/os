@@ -1,5 +1,4 @@
 #include <os/os.h>
-#include <os/console.h>
 #include <os/rtc.h>
 
 extern "C" {
@@ -12,8 +11,6 @@ extern "C" {
 }
 
 extern "C" void kernel_init() {
-    Console console = Console();
-    console.clear();
 
     // 将全局描述符表保存在内核中
     gdt_init();
@@ -29,7 +26,6 @@ extern "C" void kernel_init() {
 
     // 初始化实时时钟
     rtc_init();
-    RTC::set_alarm(2);
 
     asm volatile("sti");
     hang();

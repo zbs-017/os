@@ -93,6 +93,7 @@ void rtc_handler(int vector)
 }
 
 extern "C" void rtc_init() {
+    DEBUGK("init rtc!!!\n");
 
     // RTC::cmos_write(CMOS_B, 0b01000010); // 打开周期中断
 

@@ -110,6 +110,11 @@ protect_mode:
         call read_disk
         inc ebx
         loop .read_kernel
+
+    ; 为了兼容 grub 
+    mov eax, 0x20230405  ; 内核魔术
+    mov ebx, ards_count  ; ards 结构体数量
+    
     ; 进入内核
     jmp dword code_selector:0x10000
 
@@ -214,5 +219,5 @@ gdt_data:  ; 4GB 数据段
 gdt_end:
 
 ards_count:
-    dw 0
+    dd 0
 ards_buffer:

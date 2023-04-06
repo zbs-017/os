@@ -71,6 +71,7 @@ void pit_init()
 
 void clock_init()
 {
+    DEBUGK("init clock!!!\n");
     pit_init();
     set_interrupt_handler(IRQ_CLOCK, (void*)clock_handler);
     set_interrupt_mask(IRQ_CLOCK, true);

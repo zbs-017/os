@@ -188,6 +188,7 @@ void idt_init() {
 }
 
 extern "C" void interrupt_init() {
+    DEBUGK("init interrupt!!!\n");
     pic_init();
     idt_init();
 }

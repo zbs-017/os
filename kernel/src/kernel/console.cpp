@@ -200,3 +200,8 @@ void Console::write(char* buf, u32 count) {
     }
     set_cursor();
 }
+
+extern "C" void console_init() {
+    Console console = Console();
+    console.clear();
+}
