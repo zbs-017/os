@@ -36,6 +36,7 @@ KERNELFILES = $(BUILD)/kernel/start.o \
 				$(BUILD)/kernel/handler.o \
 				$(BUILD)/kernel/interrupt.o \
 				$(BUILD)/lib/string.o \
+				$(BUILD)/lib/stdlib.o \
 
 all: $(BUILD)/master.img $(BUILD)/system.map
 
