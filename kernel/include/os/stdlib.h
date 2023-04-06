@@ -3,7 +3,10 @@
 
 #include <os/types.h>
 
-void delay(u32 count);
-void hang();
+extern "C" {
+    void delay(u32 count);
+    void hang();
+}
+
 
 #endif

@@ -6,7 +6,7 @@ descriptor_t gdt[GDT_SIZE]; // 内核全局描述符表
 pointer_t gdt_ptr;          // 内核全局描述符表指针
 
 // 初始化内核全局描述符表
-void gdt_init()
+extern "C" void gdt_init()
 {
     DEBUGK("init gdt!!!\n");
 

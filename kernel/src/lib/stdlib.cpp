@@ -1,12 +1,12 @@
 #include <os/stdlib.h>
 
-void delay(u32 count)
+extern "C" void delay(u32 count)
 {
     while (count--)
         ;
 }
 
-void hang()
+extern "C" void hang()
 {
     while (true)
         ;

@@ -37,6 +37,4 @@ typedef struct pointer_t
     u32 base;
 } _packed pointer_t;
 
-void gdt_init();
-
 #endif
