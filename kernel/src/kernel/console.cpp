@@ -29,6 +29,8 @@
 #define ASCII_CR 0x0D  // \r
 #define ASCII_DEL 0x7F
 
+extern "C" void start_beep();
+
 u32 Console::screen = 0;
 u32 Console::pos = 0;
 u16 Console::x = 0;
@@ -151,7 +153,7 @@ void Console::write(char* buf, u32 count) {
         case ASCII_NUL:
             break;
         case ASCII_BEL:
-            // todo \a
+            start_beep();
             break;
         case ASCII_BS:
             command_bs();
