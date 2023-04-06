@@ -7,6 +7,7 @@ task_t *a = (task_t *)0x1000;
 task_t *b = (task_t *)0x2000;
 
 extern "C" void task_switch(task_t *next);
+extern "C" void switch_task(Task* next);
 
 task_t *running_task()
 {
@@ -64,4 +65,46 @@ void task_init()
     task_create(a, thread_a);
     task_create(b, thread_b);
     schedule();
+}
+
+Task::Task(Task* task, u32 (*target)(void)) {
+    // task: 任务创建的地址
+    // target: 任务执行的程序
+    this->stack_top = (u32*)((u32)task + PAGE_SIZE);  // 获得栈顶
+    this->push((void*)target);             // eip
+    this->push((void*)0x44444444);  // ebp
+    this->push((void*)0x11111111);  // ebx
+    this->push((void*)0x22222222);  // esi
+    this->push((void*)0x33333333);  // edi
+    this->pcb_eip = this->stack_top;
+}
+
+Task::~Task() {
+
+}
+
+/* 向栈中压入数据 */
+void Task::push(void* d) {
+    u32* data = (u32*)d;
+    *this->stack_top = (u32)data;
+    this->stack_top -= 4;
+}
+
+void Task::init() {
+
+    Task a = Task((Task*)0x1000, thread_a);
+    Task b = Task((Task*)0x2000, thread_b);
+    Task::schedule(a, b);
+}
+
+void Task::schedule(Task a, Task b) {
+    Task* current = Task::running_task();
+    Task* next = current == (Task*)0x1000 ? (Task*)0x2000 : (Task*)0x1000;
+    switch_task(next);
+}
+
+Task* Task::running_task() {
+    asm volatile(
+        "movl %esp, %eax\n"
+        "andl $0xfffff000, %eax\n");
 }

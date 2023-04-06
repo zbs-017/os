@@ -3,6 +3,7 @@
 #include <os/global.h>
 #include <os/debug.h>
 #include <os/interrupt.h>
+#include <os/task.h>
 
 extern "C" void kernel_init() {
     Console console = Console();
@@ -13,6 +14,8 @@ extern "C" void kernel_init() {
 
     // 初始化中断描述符表
     interrupt_init();
+
+    Task::init();
 
     return;
 }
