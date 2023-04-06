@@ -96,9 +96,14 @@ qemug: $(BUILD)/master.img
 	-audiodev pa,id=hda \
 	-machine pcspk-audiodev=hda
 
+$(BUILD)/master.vmdk: $(BUILD)/master.img
+	qemu-img convert -O vmdk $< $@
+
+vmdk: $(BUILD)/master.vmdk
+
 clean:
 	rm -rf $(BUILD)
 
 test: $(BUILD)/kernel.bin
 
-.PHONY: clean bochs test
+.PHONY: clean bochs test vmdk
