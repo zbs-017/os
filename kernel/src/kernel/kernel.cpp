@@ -16,7 +16,5 @@ extern "C" void kernel_init() {
     // 初始化中断描述符表
     interrupt_init();
 
-    Task::init();
-
     return;
 }
