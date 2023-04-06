@@ -123,7 +123,7 @@ void pic_init()
 // 初始化中断向量表
 void idt_init() {
     // 循环，依次配置每一个中断向量描述符
-    for (size_t i = 0; i < IDT_SIZE; i++) {
+    for (size_t i = 0; i < ENTRY_SIZE; i++) {
         gate_t* gate = &idt[i];
         handler_t handler = handler_entry_table[i];
         gate->offset0 = (u32)handler & 0xffff;           // 中断处理函数所在内存地址的低 16 位
