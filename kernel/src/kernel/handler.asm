@@ -22,10 +22,32 @@ interrupt_handler_%1:  ; 第 1 个参数
 ; 针对不同的中断，调用不同的中断函数
 interrupt_entry:
 
-    mov eax, [esp]  ; 获取中断向量号
+    ; 保存中断上文信息
+    push ds
+    push es
+    push fs
+    push gs
+    pusha
+
+    ; 获取中断向量号
+    mov eax, [esp + 12 * 4]  ; 一共压入 12 个寄存器
+
+    ; 向中断处理函数传递中断向量号
+    push eax
 
     ; 调用由高级语言实现的中断处理函数
     call [handler_table + eax * 4]
+
+    ; 对应 push eax，调用结束恢复栈
+    add esp, 4
+
+    ; 恢复中断下文信息
+    popa
+    pop gs
+    pop fs
+    pop es
+    pop ds
+
     ; 对应 push %1，调用结束恢复栈
     add esp, 8
     iret

@@ -3,6 +3,8 @@
 #include <os/debug.h>
 #include <os/log.h>
 #include <os/io.h>
+#include <os/stdlib.h>
+#include <os/task.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 // #define LOGK(fmt, args...)
@@ -65,15 +67,18 @@ void send_eoi(int vector)
     }
 }
 
-u32 counter = 0;
-
+// 由高级语言编写的默认 外中断 处理函数
 void ex_handler(int vector) {
     send_eoi(vector);
-    LOGK("[%d] default interrupt called %d...\n", vector, counter++);
+    Task::schedule();
 }
 
 // 由高级语言编写的默认中断处理函数
-void exception_handler(int vector)
+void exception_handler(int vector,
+    u32 edi, u32 esi, u32 ebp, u32 esp,
+    u32 ebx, u32 edx, u32 ecx, u32 eax,
+    u32 gs, u32 fs, u32 es, u32 ds,
+    u32 vector0, u32 error, u32 eip, u32 cs, u32 eflags)
 {
     Log log = Log();
     char *message = nullptr;
@@ -86,10 +91,15 @@ void exception_handler(int vector)
         message = messages[15];
     }
 
-    log.printk("Exception : [0x%02X] %s \n", vector, messages[vector]);
+    log.printk("\nEXCEPTION : %s \n", messages[vector]);
+    log.printk("   VECTOR : 0x%02X\n", vector);
+    log.printk("    ERROR : 0x%08X\n", error);
+    log.printk("   EFLAGS : 0x%08X\n", eflags);
+    log.printk("       CS : 0x%02X\n", cs);
+    log.printk("      EIP : 0x%08X\n", eip);
+    log.printk("      ESP : 0x%08X\n", esp);
     // 阻塞
-    while (true)
-        ;
+    hang();
 }
 
 // 初始化中断控制器

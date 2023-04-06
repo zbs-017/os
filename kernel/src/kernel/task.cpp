@@ -25,23 +25,23 @@ void schedule()
     task_switch(next);
 }
 
-u32 thread_a()
+u32 _ofp thread_a()
 {
+    asm volatile("sti\n");
     Log log = Log();
     while (true)
     {
         log.printk("A");
-        Task::schedule();
     }
 }
 
-u32 thread_b()
+u32 _ofp thread_b()
 {
+    asm volatile("sti\n");
     Log log = Log();
     while (true)
     {
         log.printk("B");
-        Task::schedule();
     }
 }
 
