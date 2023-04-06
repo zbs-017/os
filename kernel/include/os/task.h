@@ -26,7 +26,6 @@ void task_init();
 /* 需要虚拟内存的支持，需要把 Task 对象分配到指定内存中 */
 class Task {
     private:
-        u32* pcb_eip;
         u32* stack_top;
 
     public:
@@ -35,7 +34,7 @@ class Task {
 
         void push(void* data);
         static void init();
-        static void schedule(Task a, Task b);
+        static void schedule();
         static Task* running_task();
 };
 

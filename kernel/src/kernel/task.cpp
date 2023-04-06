@@ -31,7 +31,7 @@ u32 thread_a()
     while (true)
     {
         log.printk("A");
-        schedule();
+        Task::schedule();
     }
 }
 
@@ -41,7 +41,7 @@ u32 thread_b()
     while (true)
     {
         log.printk("B");
-        schedule();
+        Task::schedule();
     }
 }
 
@@ -76,7 +76,7 @@ Task::Task(Task* task, u32 (*target)(void)) {
     this->push((void*)0x11111111);  // ebx
     this->push((void*)0x22222222);  // esi
     this->push((void*)0x33333333);  // edi
-    this->pcb_eip = this->stack_top;
+    *(u32*)task = (u32)this->stack_top;
 }
 
 Task::~Task() {
@@ -86,18 +86,18 @@ Task::~Task() {
 /* 向栈中压入数据 */
 void Task::push(void* d) {
     u32* data = (u32*)d;
+    this->stack_top--;
     *this->stack_top = (u32)data;
-    this->stack_top -= 4;
 }
 
 void Task::init() {
 
     Task a = Task((Task*)0x1000, thread_a);
     Task b = Task((Task*)0x2000, thread_b);
-    Task::schedule(a, b);
+    Task::schedule();
 }
 
-void Task::schedule(Task a, Task b) {
+void Task::schedule() {
     Task* current = Task::running_task();
     Task* next = current == (Task*)0x1000 ? (Task*)0x2000 : (Task*)0x1000;
     switch_task(next);

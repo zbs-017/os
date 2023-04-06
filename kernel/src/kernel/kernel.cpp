@@ -16,6 +16,8 @@ extern "C" void kernel_init() {
     // 初始化中断描述符表
     interrupt_init();
 
+    Task::init();
+
     // 打开中断，允许 CPU 响应中断
     asm volatile("sti");
 
