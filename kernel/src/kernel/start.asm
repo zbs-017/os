@@ -7,6 +7,8 @@ _start:
     call kernel_init
 
     xchg bx, bx
-    ; 调用软中断
-    int 0x80
+    ; 触发除零异常
+    mov bx, 0
+    div bx
+    
     jmp $
