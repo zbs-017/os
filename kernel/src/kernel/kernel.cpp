@@ -2,7 +2,7 @@
 #include <os/console.h>
 #include <os/global.h>
 #include <os/debug.h>
-#include <os/task.h>
+#include <os/interrupt.h>
 
 extern "C" void kernel_init() {
     Console console = Console();
@@ -11,7 +11,8 @@ extern "C" void kernel_init() {
     // 将全局描述符表保存在内核中
     gdt_init();
 
-    task_init();
+    // 初始化中断描述符表
+    interrupt_init();
 
     return;
 }

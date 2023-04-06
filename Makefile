@@ -33,6 +33,8 @@ KERNELFILES = $(BUILD)/kernel/start.o \
 				$(BUILD)/kernel/global.o \
 				$(BUILD)/kernel/schdule.o \
 				$(BUILD)/kernel/task.o \
+				$(BUILD)/kernel/handler.o \
+				$(BUILD)/kernel/interrupt.o \
 				$(BUILD)/lib/string.o \
 
 all: $(BUILD)/master.img $(BUILD)/system.map
