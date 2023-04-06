@@ -83,6 +83,8 @@ $(BUILD)/%.img: $(BUILD)/boot/boot.bin \
 	yes | bximage -q -hd=16 -func=create -sectsize=512 -imgmode=flat $@
 	dd if=$(BUILD)/boot/boot.bin of=$@ bs=512 count=1 conv=notrunc
 	dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 seek=2 count=4 conv=notrunc
+# 测试 system.bin 小于 100k，否则修改下面命令中的 count 的大小
+	test -n "$$(find $(BUILD)/system.bin -size -100k)"
 # 将内核二进制文件写入硬盘
 	dd if=$(BUILD)/system.bin of=$@ bs=512 seek=10 count=200 conv=notrunc
 
