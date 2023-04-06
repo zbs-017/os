@@ -3,17 +3,18 @@
 
 extern "C" {
     void interrupt_init();
-    void gdt_init();
     void clock_init();
     void time_init();
     void rtc_init();
+    void memory_map_init();
+    void memory_test();
     void hang();
 }
 
 extern "C" void kernel_init() {
 
-    // 将全局描述符表保存在内核中
-    gdt_init();
+    // 初始化物理内存页数组
+    memory_map_init();
 
     // 初始化中断描述符表
     interrupt_init();
@@ -26,6 +27,9 @@ extern "C" void kernel_init() {
 
     // 初始化实时时钟
     rtc_init();
+
+    // 测试 获取物理内存页
+    memory_test();
 
     asm volatile("sti");
     hang();

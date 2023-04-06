@@ -5,6 +5,7 @@
 
 extern "C" {
     void memory_init(u32 magic, u32 addr);
+    void memory_map_init();
 }
 
 #define PAGE_SIZE 0x1000     // 一页的大小 4K
@@ -19,6 +20,15 @@ class PhysicalMemory {
         static u32 total_pages;
         static u32 free_pages;
 
+        static u32 start_page;       // 可分配物理内存起始位置
+        static u8* memory_map;       // 物理内存数组(存放在 1M 内存开始的位置)
+        static u32 memory_map_pages; // 物理内存数组占用的页数
+
+        /* 分配一页物理内存 */
+        static u32 get_page();
+
+        /* 释放一页物理内存 */
+        static void put_page(u32 addr);
 };
 
 #endif

@@ -23,3 +23,9 @@ u8 bin_to_bcd(u8 value)
 {
     return (value / 10) * 0x10 + (value % 10);
 }
+
+// 计算 num 分成 size 的数量 (向上取整)
+u32 div_round_up(u32 num, u32 size)
+{
+    return (num + size - 1) / size;
+}
