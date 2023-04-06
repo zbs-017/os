@@ -6,6 +6,7 @@ extern "C" {
     void gdt_init();
     void clock_init();
     void time_init();
+    void rtc_init();
     void hang();
 }
 
@@ -20,10 +21,13 @@ extern "C" void kernel_init() {
     interrupt_init();
 
     // 初始化时钟中断
-    clock_init();
+    // clock_init();
 
     // 初始化时间
     time_init();
+
+    // 初始化实时时钟
+    rtc_init();
 
     asm volatile("sti");
     hang();
