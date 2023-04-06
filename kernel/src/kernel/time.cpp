@@ -159,5 +159,4 @@ extern "C" void time_init()
          time.tm_hour,
          time.tm_min,
          time.tm_sec);
-    hang();
 }

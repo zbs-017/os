@@ -40,6 +40,14 @@ KERNELFILES = $(BUILD)/kernel/start.o \
 				$(BUILD)/lib/string.o \
 				$(BUILD)/lib/stdlib.o \
 
+QEMU = qemu-system-i386 \
+	-m 32M \
+	-boot c \
+	-drive file=$<,if=ide,index=0,media=disk,format=raw \
+	-audiodev pa,id=hda \
+	-machine pcspk-audiodev=hda \
+	-rtc base=localtime \
+
 all: $(BUILD)/master.img $(BUILD)/system.map
 
 $(BUILD)/%.bin: $(SRC)/%.asm
@@ -81,21 +89,10 @@ bochs: $(BUILD)/master.img
 	bochs -q
 
 qemu: $(BUILD)/master.img
-	qemu-system-i386 \
-	-m 32M \
-	-boot c \
-	-drive file=$<,if=ide,index=0,media=disk,format=raw \
-	-audiodev pa,id=hda \
-	-machine pcspk-audiodev=hda
+	$(QEMU)
 
 qemug: $(BUILD)/master.img
-	qemu-system-i386 \
-	-S -s \
-	-m 32M \
-	-boot c \
-	-drive file=$<,if=ide,index=0,media=disk,format=raw \
-	-audiodev pa,id=hda \
-	-machine pcspk-audiodev=hda
+	$(QEMU) -S -s
 
 $(BUILD)/master.vmdk: $(BUILD)/master.img
 	qemu-img convert -O vmdk $< $@
