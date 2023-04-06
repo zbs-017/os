@@ -1,5 +1,6 @@
 #include <os/os.h>
 #include <os/console.h>
+#include <os/rtc.h>
 
 extern "C" {
     void interrupt_init();
@@ -21,13 +22,14 @@ extern "C" void kernel_init() {
     interrupt_init();
 
     // 初始化时钟中断
-    // clock_init();
+    clock_init();
 
     // 初始化时间
     time_init();
 
     // 初始化实时时钟
     rtc_init();
+    RTC::set_alarm(2);
 
     asm volatile("sti");
     hang();
