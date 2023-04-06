@@ -2,6 +2,7 @@
 
 extern kernel_init
 extern console_init
+extern memory_init
 
 global _start
 _start:
@@ -9,7 +10,8 @@ _start:
     push eax  ; 内核魔数
 
     call console_init
+    call memory_init
 
-    call kernel_init
+    ; call kernel_init
     
     jmp $
