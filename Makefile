@@ -36,6 +36,7 @@ KERNELFILES = $(BUILD)/kernel/start.o \
 				$(BUILD)/kernel/handler.o \
 				$(BUILD)/kernel/interrupt.o \
 				$(BUILD)/kernel/clock.o \
+				$(BUILD)/kernel/time.o \
 				$(BUILD)/lib/string.o \
 				$(BUILD)/lib/stdlib.o \
 
