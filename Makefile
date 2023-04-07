@@ -43,6 +43,7 @@ KERNELFILES = $(BUILD)/kernel/start.o \
 				$(BUILD)/lib/string.o \
 				$(BUILD)/lib/stdlib.o \
 				$(BUILD)/lib/bitmap.o \
+				$(BUILD)/lib/syscall.o \
 
 QEMU = qemu-system-i386 \
 	-m 32M \

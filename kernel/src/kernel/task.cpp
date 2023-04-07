@@ -8,6 +8,10 @@
 
 extern "C" void switch_task(task* next);
 
+extern "C" void task_yield() {
+    TaskManager::schedule();
+}
+
 task* TaskManager::task_table[NR_TASKS];
 
 TaskManager::TaskManager() { }
@@ -86,6 +90,8 @@ task* TaskManager::task_search(task_state state) {
 }
 
 void TaskManager::schedule() {
+    assert(!get_interrupt_state());
+
     task* current = running_task();
     task* next = task_search(TASK_READY);
 

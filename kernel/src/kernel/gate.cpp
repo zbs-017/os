@@ -1,6 +1,7 @@
 #include <os/interrupt.h>
 #include <os/assert.h>
 #include <os/debug.h>
+#include <os/syscall.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -9,6 +10,8 @@
 extern "C" {
 
     handler_t syscall_table[SYSCALL_SIZE];
+
+    void task_yield();
 
     void syscall_check(u32 nr)
     {
@@ -36,6 +39,7 @@ extern "C" {
             syscall_table[i] = (void*)sys_default;
         }
 
-        syscall_table[0] = (void*)sys_test;
+        syscall_table[SYS_NR_TEST] = (void*)sys_test;
+        syscall_table[SYS_NR_YIELD] = (void*)task_yield;
     }
 }

@@ -1,6 +1,7 @@
 #include <os/os.h>
 #include <os/memory.h>
 #include <os/task.h>
+#include <os/syscall.h>
 
 extern "C" {
     void interrupt_init();
@@ -24,6 +25,7 @@ u32 _ofp thread_a()
     while (true)
     {
         log.printk("A");
+        yield();
     }
 }
 
@@ -35,6 +37,7 @@ u32 _ofp thread_b()
     while (true)
     {
         log.printk("B");
+        yield();
     }
 }
 
@@ -46,6 +49,7 @@ u32 _ofp thread_c()
     while (true)
     {
         log.printk("C");
+        yield();
     }
 }
 
@@ -79,7 +83,7 @@ extern "C" void kernel_init() {
     syscall_init();
 
     // 打开中断
-    // set_interrupt_state(true);
+    set_interrupt_state(true);
 
     // hang();
 }
