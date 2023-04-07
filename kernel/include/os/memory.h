@@ -44,26 +44,23 @@ typedef struct page_entry_t {
     u32 index : 20;  // 页索引
 } _packed page_entry_t;
 
-u32 get_cr3();
-void set_cr3(u32 pde);
 
-
-#define KERNEL_PAGE_DIR 0x200000     // 内核页目录
-#define KERNEL_PAGE_ENTRY 0x201000   // 内核页表
+#define KERNEL_PAGE_DIR 0x1000       // 内核页目录
 
 class VirtualMemory {
     public:
-        static page_entry_t* pde;    // 内核页目录
-        static page_entry_t* pte;    // 内核页表
+        static page_entry_t* pde;                   // 内核页目录
+        static u32 kernel_page_table[];   // 内核页表
 
         VirtualMemory();
         ~VirtualMemory();
 
         static void mapping_init();
-
-    protected:
         static void entry_init(page_entry_t* entry, u32 index);
-
+        static page_entry_t* get_pde();
+        static page_entry_t* get_pte(u32 vaddr);
+        static void flush_tlb(u32 vaddr);
+    
     private:
         static void set_cr3(u32 pde);
         static u32 get_cr3();
