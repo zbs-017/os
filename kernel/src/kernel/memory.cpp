@@ -148,3 +148,80 @@ extern "C" void memory_test() {
     }
     DEBUGK("memory_test success!\n");
 }
+
+page_entry_t* VirtualMemory::pde = nullptr;
+page_entry_t* VirtualMemory::pte = nullptr;
+
+/* 获取 cr3 寄存器 */
+u32 VirtualMemory::get_cr3() {
+    // 直接将 mov eax, cr3，返回值在 eax 中
+    asm volatile("movl %cr3, %eax\n");
+}
+
+/* 设置 cr3 寄存器 */
+void VirtualMemory::set_cr3(u32 pde) {
+    ASSERT_PAGE(pde);
+    asm volatile("movl %%eax, %%cr3\n" ::"a"(pde));
+}
+
+/* 启用分页 */
+void VirtualMemory::enable_page() {
+    // 0b1000_0000_0000_0000_0000_0000_0000_0000
+    // 0x80000000
+    asm volatile(
+        "movl %cr0, %eax\n"
+        "orl $0x80000000, %eax\n"
+        "movl %eax, %cr0\n");
+}
+
+/* 初始化页表项 */
+void VirtualMemory::entry_init(page_entry_t *entry, u32 index) {
+    *(u32 *)entry = 0;      // 清空页表项 
+    entry->present = 1;     // 在内存
+    entry->write = 1;       // 可写
+    entry->user = 1;        // 所有人都可访问
+    entry->index = index;   // 页表索引
+}
+
+
+#define KERNEL_PAGE_DIR 0x200000    // 内核页目录
+#define KERNEL_PAGE_ENTRY 0x201000  // 内核页表
+
+/* 初始化内存映射 */
+void VirtualMemory::mapping_init()
+{
+    // 内核页目录
+    page_entry_t *pde = (page_entry_t *)KERNEL_PAGE_DIR;
+    String::memset(pde, 0, PAGE_SIZE);
+
+    // 保存内核页表
+    entry_init(&pde[0], IDX(KERNEL_PAGE_ENTRY));
+
+    // 内核页表
+    page_entry_t *pte = (page_entry_t *)KERNEL_PAGE_ENTRY;
+    String::memset(pte, 0, PAGE_SIZE);
+
+    // 映射前 4M 虚拟内存内存到物理内存中的前 4M
+    page_entry_t *entry;
+    for (size_t tidx = 0; tidx < 1024; tidx++)
+    {
+        entry = &pte[tidx];
+        entry_init(entry, tidx);
+        PhysicalMemory::memory_map[tidx] = 1; // 设置物理内存数组，该页被占用
+    }
+
+    BMB;
+
+    // 设置 cr3 寄存器
+    set_cr3((u32)pde);
+
+    BMB;
+
+    // 分页有效
+    enable_page();
+}
+
+extern "C" void virtual_memory_map_init() {
+    VirtualMemory::mapping_init();
+}
+
