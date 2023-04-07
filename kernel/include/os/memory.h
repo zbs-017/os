@@ -104,6 +104,12 @@ class KernelVirtualMemory : public VirtualMemory {
         /* 释放 count 个连续的内核页 */
         void free_kpage(u32 vaddr, u32 count);
 
+        /* 获取 pde */
+        page_entry_t* get_pde();
+
+        /* 获取 kernel_map */
+        Bitmap* get_kernel_map();
+
     protected:
         /* 从位图中扫描 count 个连续的页 */
         u32 scan_page(u32 count);

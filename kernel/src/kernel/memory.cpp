@@ -243,4 +243,12 @@ void KernelVirtualMemory::reset_page(u32 addr, u32 count) {
     }
 }
 
+page_entry_t* KernelVirtualMemory::get_pde() {
+    return this->pde;
+}
+
+Bitmap* KernelVirtualMemory::get_kernel_map() {
+    return &(this->kernel_map);
+}
+
 KernelVirtualMemory::~KernelVirtualMemory() { }

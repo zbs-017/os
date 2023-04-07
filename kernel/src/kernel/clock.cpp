@@ -2,6 +2,7 @@
 #include <os/interrupt.h>
 #include <os/assert.h>
 #include <os/debug.h>
+#include <os/task.h>
 
 #define PIT_CHAN0_REG 0X40
 #define PIT_CHAN2_REG 0X42
@@ -50,10 +51,19 @@ void clock_handler(int vector)
 {
     assert(vector == 0x20);
     send_eoi(vector);
+    stop_beep();
 
     jiffies++;
 
-    stop_beep();
+    task* t = TaskManager::running_task();
+    assert(t->magic == OS_MAGIC);
+
+    t->jiffies = jiffies;
+    t->ticks--;
+    if (!t->ticks) {
+        t->ticks = t->priority;
+        TaskManager::schedule();
+    }
 }
 
 void pit_init()

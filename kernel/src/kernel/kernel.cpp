@@ -1,5 +1,6 @@
 #include <os/os.h>
 #include <os/memory.h>
+#include <os/task.h>
 
 extern "C" {
     void interrupt_init();
@@ -14,13 +15,37 @@ extern "C" {
 #include <os/interrupt.h>
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
-/* 涉及到临界区操作的时候，需要先关闭中断，然后执行完以后再开启中断 */
-void intr_test() {
-    bool intr = interrupt_disable();
+u32 _ofp thread_a()
+{
+    set_interrupt_state(true);
 
-    // do something ...
+    Log log = Log();
+    while (true)
+    {
+        log.printk("A");
+    }
+}
 
-    set_interrupt_state(intr);
+u32 _ofp thread_b()
+{
+    set_interrupt_state(true);
+
+    Log log = Log();
+    while (true)
+    {
+        log.printk("B");
+    }
+}
+
+u32 _ofp thread_c()
+{
+    set_interrupt_state(true);
+
+    Log log = Log();
+    while (true)
+    {
+        log.printk("C");
+    }
 }
 
 extern "C" void kernel_init() {
@@ -35,7 +60,7 @@ extern "C" void kernel_init() {
     interrupt_init();
 
     // 初始化时钟中断
-    // clock_init();
+    clock_init();
 
     // 初始化时间
     // time_init();
@@ -43,24 +68,14 @@ extern "C" void kernel_init() {
     // 初始化实时时钟
     // rtc_init();
 
-    BMB;
+    // 初始化任务
+    TaskManager::init(kernel_virtual_memory);
+    TaskManager::create(kernel_virtual_memory, thread_a, "a", 5, KERNEL_USER);
+    TaskManager::create(kernel_virtual_memory, thread_b, "b", 5, KERNEL_USER);
+    TaskManager::create(kernel_virtual_memory, thread_c, "c", 5, KERNEL_USER);
 
-    bool intr = interrupt_disable();
+    // 打开中断
     set_interrupt_state(true);
-
-    LOGK("%d\n", intr);
-    LOGK("%d\n", get_interrupt_state());
-
-    BMB;
-
-    intr = interrupt_disable();
-
-    BMB;
-    set_interrupt_state(true);
-
-    LOGK("%d\n", intr);
-    LOGK("%d\n", get_interrupt_state());
-
 
     hang();
 }

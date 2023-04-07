@@ -1,5 +1,8 @@
 #include <os/task.h>
 #include <os/log.h>
+#include <os/string.h>
+#include <os/interrupt.h>
+#include <os/assert.h>
 
 #define PAGE_SIZE 0x1000
 
@@ -7,7 +10,7 @@ task_t *a = (task_t *)0x1000;
 task_t *b = (task_t *)0x2000;
 
 extern "C" void task_switch(task_t *next);
-extern "C" void switch_task(Task* next);
+extern "C" void switch_task(task* next);
 
 task_t *running_task()
 {
@@ -25,86 +28,96 @@ void schedule()
     task_switch(next);
 }
 
-u32 _ofp thread_a()
-{
-    asm volatile("sti\n");
-    Log log = Log();
-    while (true)
-    {
-        log.printk("A");
-    }
+task* TaskManager::task_table[NR_TASKS];
+
+TaskManager::TaskManager() { }
+TaskManager::~TaskManager() { }
+
+void TaskManager::init(KernelVirtualMemory& kvm) {
+    task* t = running_task();
+    t->magic = OS_MAGIC;
+    t->ticks = 1;   // 调度完初始化任务后，就开始调度其他任务
+
+    // 初始化任务表
+    String::memset(TaskManager::task_table, 0, sizeof(TaskManager::task_table));
 }
 
-u32 _ofp thread_b()
-{
-    asm volatile("sti\n");
-    Log log = Log();
-    while (true)
-    {
-        log.printk("B");
-    }
-}
+task* TaskManager::create(KernelVirtualMemory& kvm, target_t target, const char *name, u32 priority, u32 uid) {
+    task* t = get_free_task(kvm);      // 获取一个空闲的任务
+    String::memset(t, 0, PAGE_SIZE);   // 初始化任务内存空间
 
-static void task_create(task_t *task, target_t target)
-{
-    u32 stack = (u32)task + PAGE_SIZE;
+    u32 stack = (u32)t + PAGE_SIZE;    // 获得 task 栈顶
 
-    stack -= sizeof(task_frame_t);
-    task_frame_t *frame = (task_frame_t *)stack;
+    stack -= sizeof(task_frame);  // 开始初始化栈
+    task_frame* frame = (task_frame*) stack;
     frame->ebx = 0x11111111;
     frame->esi = 0x22222222;
     frame->edi = 0x33333333;
     frame->ebp = 0x44444444;
     frame->eip = target;
 
-    task->stack = (u32 *)stack;
+    String::strcpy((char*)t->name, name);
+
+    t->stack = (u32*) stack;
+    t->priority = priority;
+    t->ticks = t->priority;
+    t->jiffies = 0;
+    t->state = TASK_READY;
+    t->uid = uid;
+    t->pde = kvm.get_pde();
+    t->vmap = kvm.get_kernel_map();
+    t->magic = OS_MAGIC;
+
+    return t;
 }
 
-void task_init()
-{
-    task_create(a, thread_a);
-    task_create(b, thread_b);
-    schedule();
+task* TaskManager::get_free_task(KernelVirtualMemory& kvm) {
+    for (size_t i = 0; i < NR_TASKS; i++) {
+        if (task_table[i] == nullptr) {
+            task_table[i] = (task*)kvm.alloc_kpage(1);
+            return task_table[i];
+        }
+    }
+
+    panic("No more tasks!\n");
 }
 
-Task::Task(Task* task, u32 (*target)(void)) {
-    // task: 任务创建的地址
-    // target: 任务执行的程序
-    this->stack_top = (u32*)((u32)task + PAGE_SIZE);  // 获得栈顶
-    this->push((void*)target);             // eip
-    this->push((void*)0x44444444);  // ebp
-    this->push((void*)0x11111111);  // ebx
-    this->push((void*)0x22222222);  // esi
-    this->push((void*)0x33333333);  // edi
-    *(u32*)task = (u32)this->stack_top;
-}
-
-Task::~Task() {
-
-}
-
-/* 向栈中压入数据 */
-void Task::push(void* d) {
-    u32* data = (u32*)d;
-    this->stack_top--;
-    *this->stack_top = (u32)data;
-}
-
-void Task::init() {
-
-    Task a = Task((Task*)0x1000, thread_a);
-    Task b = Task((Task*)0x2000, thread_b);
-    Task::schedule();
-}
-
-void Task::schedule() {
-    Task* current = Task::running_task();
-    Task* next = current == (Task*)0x1000 ? (Task*)0x2000 : (Task*)0x1000;
-    switch_task(next);
-}
-
-Task* Task::running_task() {
+task* TaskManager::running_task() {
     asm volatile(
         "movl %esp, %eax\n"
         "andl $0xfffff000, %eax\n");
+}
+
+task* TaskManager::task_search(task_state state) {
+    assert(!get_interrupt_state());
+    task* t = nullptr;
+    task* current = running_task();
+
+    for (size_t i = 0; i < NR_TASKS; i++) {
+        task* ptr = task_table[i];
+        if (ptr == nullptr) continue;
+        if (ptr->state != state) continue;
+        if (ptr == current) continue;
+        if (t == nullptr || t->ticks < ptr->ticks || ptr->jiffies < t->jiffies)
+            t = ptr;
+    }
+
+    return t;
+}
+
+void TaskManager::schedule() {
+    task* current = running_task();
+    task* next = task_search(TASK_READY);
+
+    assert(next != nullptr);
+    assert(next->magic == OS_MAGIC);
+
+    if (current->state == TASK_RUNNING) {
+        current->state = TASK_READY;
+    }
+
+    next->state = TASK_RUNNING;
+    if (next == current) return;
+
+    switch_task(next);
 }

@@ -1,3 +1,6 @@
+[bits 32]
+
+section .text
 global task_switch
 task_switch:
     push ebp
@@ -24,6 +27,10 @@ task_switch:
     ; 将 next 中的 eip pop 了出来，所以，返回以后执行的是 next 任务中的程序
     ret
 
+
+[bits 32]
+
+section .text
 global switch_task
 switch_task:
     push ebp
