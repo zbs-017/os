@@ -49,22 +49,12 @@ typedef struct page_entry_t {
 
 class VirtualMemory {
     public:
-        static page_entry_t* pde;                   // 内核页目录
+        static page_entry_t* pde;          // 内核页目录
         static u32 kernel_page_table[];   // 内核页表
 
         VirtualMemory();
         ~VirtualMemory();
 
-        static void mapping_init();
-        static void entry_init(page_entry_t* entry, u32 index);
-        static page_entry_t* get_pde();
-        static page_entry_t* get_pte(u32 vaddr);
-        static void flush_tlb(u32 vaddr);
-    
-    private:
-        static void set_cr3(u32 pde);
-        static u32 get_cr3();
-        static void enable_page();
 };
 
 #endif

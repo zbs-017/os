@@ -7,8 +7,8 @@ extern "C" {
     void time_init();
     void rtc_init();
     void memory_map_init();
-    void virtual_memory_map_init();
-    void bitmap_test();
+    void mapping_init();
+    void memory_test();
     void hang();
 }
 
@@ -18,7 +18,7 @@ extern "C" void kernel_init() {
     memory_map_init();
 
     // 初始化虚拟内存映射
-    virtual_memory_map_init();
+    mapping_init();
 
     // 初始化中断描述符表
     interrupt_init();
@@ -32,7 +32,7 @@ extern "C" void kernel_init() {
     // 初始化实时时钟
     // rtc_init();
 
-    bitmap_test();
+    memory_test();
 
     // asm volatile("sti");
     hang();

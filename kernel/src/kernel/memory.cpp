@@ -155,19 +155,19 @@ void PhysicalMemory::put_page(u32 addr) {
 }
 
 /* 获取 cr3 寄存器 */
-u32 VirtualMemory::get_cr3() {
+u32 get_cr3() {
     // 直接将 mov eax, cr3，返回值在 eax 中
     asm volatile("movl %cr3, %eax\n");
 }
 
 /* 设置 cr3 寄存器 */
-void VirtualMemory::set_cr3(u32 pde) {
+void set_cr3(u32 pde) {
     ASSERT_PAGE(pde);
     asm volatile("movl %%eax, %%cr3\n" ::"a"(pde));
 }
 
 /* 启用分页 */
-void VirtualMemory::enable_page() {
+void enable_page() {
     // 0b1000_0000_0000_0000_0000_0000_0000_0000
     // 0x80000000
     asm volatile(
@@ -177,7 +177,7 @@ void VirtualMemory::enable_page() {
 }
 
 /* 初始化页表项 */
-void VirtualMemory::entry_init(page_entry_t *entry, u32 index) {
+void entry_init(page_entry_t *entry, u32 index) {
     *(u32 *)entry = 0;      // 清空页表项 
     entry->present = 1;     // 在内存
     entry->write = 1;       // 可写
@@ -186,7 +186,7 @@ void VirtualMemory::entry_init(page_entry_t *entry, u32 index) {
 }
 
 /* 初始化内存映射 */
-void VirtualMemory::mapping_init()
+extern "C" void mapping_init()
 {
     // 内核页目录
     page_entry_t *pde = (page_entry_t *)KERNEL_PAGE_DIR;
@@ -226,23 +226,57 @@ void VirtualMemory::mapping_init()
     enable_page();
 }
 
-page_entry_t* VirtualMemory::get_pde() {
+page_entry_t* get_pde() {
     return (page_entry_t *)(0xfffff000);
 }
 
-page_entry_t* VirtualMemory::get_pte(u32 vaddr)
+page_entry_t* get_pte(u32 vaddr)
 {
     return (page_entry_t *)(0xffc00000 | (DIDX(vaddr) << 12));
 }
 
 // 刷新虚拟地址 vaddr 的 块表 TLB
-void VirtualMemory::flush_tlb(u32 vaddr)
+void flush_tlb(u32 vaddr)
 {
     asm volatile("invlpg (%0)" ::"r"(vaddr)
                  : "memory");
 }
 
+extern "C" void memory_test()
+{
+    BMB;
 
-extern "C" void virtual_memory_map_init() {
-    VirtualMemory::mapping_init();
+    // 将 20 M 0x1400000 内存映射到 64M 0x4000000 的位置
+
+    // 我们还需要一个页表，0x900000
+
+    u32 vaddr = 0x4000000; // 线性地址几乎可以是任意的
+    u32 paddr = 0x1400000; // 物理地址必须要确定存在
+    u32 table = 0x900000;  // 页表也必须是物理地址
+
+    page_entry_t *pde = get_pde();
+
+    page_entry_t *dentry = &pde[DIDX(vaddr)];
+    entry_init(dentry, IDX(table));
+
+    page_entry_t *pte = get_pte(vaddr);
+    page_entry_t *tentry = &pte[TIDX(vaddr)];
+
+    entry_init(tentry, IDX(paddr));
+
+    BMB;
+
+    char *ptr = (char *)(0x4000000);
+    ptr[0] = 'a';
+
+    BMB;
+
+    entry_init(tentry, IDX(0x1500000));
+    flush_tlb(vaddr);
+
+    BMB;
+
+    ptr[2] = 'b';
+
+    BMB;
 }
