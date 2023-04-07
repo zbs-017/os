@@ -1,6 +1,7 @@
 #include <os/console.h>
 #include <os/io.h>
 #include <os/string.h>
+#include <os/interrupt.h>
 
 #define CRT_ADDR_REG 0x3D4 // CRT(6845)索引寄存器
 #define CRT_DATA_REG 0x3D5 // CRT(6845)数据寄存器
@@ -143,6 +144,8 @@ void Console::command_del() {
 }
 
 void Console::write(char* buf, u32 count) {
+    bool intr = interrupt_disable();
+
     char ch;
     char *ptr = (char *)pos;
     while (count--)
@@ -199,6 +202,8 @@ void Console::write(char* buf, u32 count) {
         }
     }
     set_cursor();
+
+    set_interrupt_state(intr);
 }
 
 extern "C" void console_init() {

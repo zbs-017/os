@@ -61,7 +61,6 @@ void clock_handler(int vector)
     t->jiffies = jiffies;
     t->ticks--;
     if (!t->ticks) {
-        t->ticks = t->priority;
         TaskManager::schedule();
     }
 }
