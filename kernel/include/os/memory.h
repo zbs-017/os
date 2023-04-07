@@ -2,6 +2,7 @@
 #define _H_MEMORY_P
 
 #include <os/types.h>
+#include <os/assert.h>
 
 extern "C" {
     void memory_init(u32 magic, u32 addr);
@@ -10,6 +11,8 @@ extern "C" {
 
 #define PAGE_SIZE 0x1000     // 一页的大小 4K
 #define MEMORY_BASE 0x100000 // 1M，可用内存开始的位置
+
+#define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
 
 class PhysicalMemory {
     public:
@@ -44,17 +47,55 @@ typedef struct page_entry_t {
     u32 index : 20;  // 页索引
 } _packed page_entry_t;
 
-
-#define KERNEL_PAGE_DIR 0x1000       // 内核页目录
-
 class VirtualMemory {
-    public:
-        static page_entry_t* pde;          // 内核页目录
-        static u32 kernel_page_table[];   // 内核页表
+    private:
+        page_entry_t* pde;          // 页目录
 
+    public:
         VirtualMemory();
         ~VirtualMemory();
 
+};
+
+class KernelVirtualMemory : public VirtualMemory {
+    private:
+        page_entry_t* pde;
+
+    public:
+        KernelVirtualMemory();
+        ~KernelVirtualMemory();
+
+        /* 获取 cr3 寄存器 */
+        u32  get_cr3() {
+            // 直接将 mov eax, cr3，返回值在 eax 中
+            asm volatile("movl %cr3, %eax\n");
+        }
+
+        /* 设置 cr3 寄存器 */
+        void set_cr3(u32 pde) {
+            ASSERT_PAGE(pde);
+            asm volatile("movl %%eax, %%cr3\n" ::"a"(pde));
+        }
+
+        /* 启用分页 */
+        static void _inline enable_page() {
+            // 0b1000_0000_0000_0000_0000_0000_0000_0000
+            // 0x80000000
+            asm volatile(
+                "movl %cr0, %eax\n"
+                "orl $0x80000000, %eax\n"
+                "movl %eax, %cr0\n");
+        }
+
+        // 刷新虚拟地址 vaddr 的 块表 TLB
+        void _inline flush_tlb(u32 vaddr)
+        {
+            asm volatile("invlpg (%0)" ::"r"(vaddr)
+                        : "memory");
+        }
+
+        void entry_init(page_entry_t *entry, u32 index);
+        void add_page_table(u32 vaddr, u32 paddr);
 };
 
 #endif

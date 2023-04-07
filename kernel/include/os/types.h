@@ -12,6 +12,8 @@
 // 用于省略函数的栈帧
 #define _ofp __attribute__((optimize("omit-frame-pointer")))
 
+#define _inline __attribute__((always_inline)) inline
+
 typedef unsigned int size_t;
 
 typedef char int8;

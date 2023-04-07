@@ -1,7 +1,6 @@
 #include <os/memory.h>
 #include <os/os.h>
 #include <os/debug.h>
-#include <os/assert.h>
 #include <os/stdlib.h>
 #include <os/string.h>
 
@@ -14,7 +13,6 @@
 #define DIDX(addr) (((u32)addr >> 22) & 0x3ff)  // 获取 addr 的页目录索引
 #define TIDX(addr) (((u32)addr >> 12) & 0x3ff)  // 获取 addr 的页表索引
 #define PAGE(idx) ((u32)idx << 12)              // 获取页索引 idx 对应的页开始的位置
-#define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
 
 
 typedef struct ards_t
@@ -32,13 +30,13 @@ u32 PhysicalMemory::start_page = 0;
 u8* PhysicalMemory::memory_map = nullptr; 
 u32 PhysicalMemory::memory_map_pages = 0;
 
-page_entry_t* VirtualMemory::pde = nullptr;
-u32 VirtualMemory::kernel_page_table[] = {
+// 内存页表存放位置
+static u32 kernel_page_table[] = {
     0x2000,
     0x3000,
 };
 
-#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(VirtualMemory::kernel_page_table))
+#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(kernel_page_table))
 
 /* 从 loader 中获取物理内存检测结果 */
 extern "C" void memory_init(u32 magic, u32 addr) {
@@ -78,13 +76,6 @@ extern "C" void memory_init(u32 magic, u32 addr) {
 
     LOGK("Total pages %d\n", PhysicalMemory::total_pages);
     LOGK("Free pages %d\n", PhysicalMemory::free_pages);
-
-    // 判断物理内存是否够内核使用
-    if (PhysicalMemory::memory_size < KERNEL_MEMORY_SIZE)
-    {
-        panic("System memory is %dM too small, at least %dM needed\n",
-              PhysicalMemory::memory_size / MEMORY_BASE, KERNEL_MEMORY_SIZE / MEMORY_BASE);
-    }
 }
 
 /* 初始化物理内存页数组 */
@@ -154,49 +145,23 @@ void PhysicalMemory::put_page(u32 addr) {
     LOGK("PUT page 0x%p\n", addr);
 }
 
-/* 获取 cr3 寄存器 */
-u32 get_cr3() {
-    // 直接将 mov eax, cr3，返回值在 eax 中
-    asm volatile("movl %cr3, %eax\n");
-}
+VirtualMemory::VirtualMemory() { }
+VirtualMemory::~VirtualMemory() { }
 
-/* 设置 cr3 寄存器 */
-void set_cr3(u32 pde) {
-    ASSERT_PAGE(pde);
-    asm volatile("movl %%eax, %%cr3\n" ::"a"(pde));
-}
+#define KERNEL_PAGE_DIR 0x1000       // 内核页目录
 
-/* 启用分页 */
-void enable_page() {
-    // 0b1000_0000_0000_0000_0000_0000_0000_0000
-    // 0x80000000
-    asm volatile(
-        "movl %cr0, %eax\n"
-        "orl $0x80000000, %eax\n"
-        "movl %eax, %cr0\n");
-}
+KernelVirtualMemory::KernelVirtualMemory() {
 
-/* 初始化页表项 */
-void entry_init(page_entry_t *entry, u32 index) {
-    *(u32 *)entry = 0;      // 清空页表项 
-    entry->present = 1;     // 在内存
-    entry->write = 1;       // 可写
-    entry->user = 1;        // 所有人都可访问
-    entry->index = index;   // 页表索引
-}
-
-/* 初始化内存映射 */
-extern "C" void mapping_init()
-{
     // 内核页目录
-    page_entry_t *pde = (page_entry_t *)KERNEL_PAGE_DIR;
+    pde = (page_entry_t *)KERNEL_PAGE_DIR;
     String::memset(pde, 0, PAGE_SIZE);
+
 
     idx_t index = 0;
 
     // 将前 8M 虚拟内存映射到物理内存前 8M
-    for (idx_t didx = 0; didx < (sizeof(VirtualMemory::kernel_page_table) / 4); didx++) {
-        page_entry_t *pte = (page_entry_t *)VirtualMemory::kernel_page_table[didx];
+    for (idx_t didx = 0; didx < (sizeof(kernel_page_table) / 4); didx++) {
+        page_entry_t *pte = (page_entry_t *)kernel_page_table[didx];
         String::memset(pte, 0, PAGE_SIZE);
 
         page_entry_t *dentry = &pde[didx];
@@ -224,59 +189,16 @@ extern "C" void mapping_init()
     BMB;
     // 分页有效
     enable_page();
+
 }
 
-page_entry_t* get_pde() {
-    return (page_entry_t *)(0xfffff000);
+/* 初始化页表项 */
+void KernelVirtualMemory::entry_init(page_entry_t *entry, u32 index) {
+    *(u32 *)entry = 0;      // 清空页表项 
+    entry->present = 1;     // 在内存
+    entry->write = 1;       // 可写
+    entry->user = 1;        // 所有人都可访问
+    entry->index = index;   // 页表索引
 }
 
-page_entry_t* get_pte(u32 vaddr)
-{
-    return (page_entry_t *)(0xffc00000 | (DIDX(vaddr) << 12));
-}
-
-// 刷新虚拟地址 vaddr 的 块表 TLB
-void flush_tlb(u32 vaddr)
-{
-    asm volatile("invlpg (%0)" ::"r"(vaddr)
-                 : "memory");
-}
-
-extern "C" void memory_test()
-{
-    BMB;
-
-    // 将 20 M 0x1400000 内存映射到 64M 0x4000000 的位置
-
-    // 我们还需要一个页表，0x900000
-
-    u32 vaddr = 0x4000000; // 线性地址几乎可以是任意的
-    u32 paddr = 0x1400000; // 物理地址必须要确定存在
-    u32 table = 0x900000;  // 页表也必须是物理地址
-
-    page_entry_t *pde = get_pde();
-
-    page_entry_t *dentry = &pde[DIDX(vaddr)];
-    entry_init(dentry, IDX(table));
-
-    page_entry_t *pte = get_pte(vaddr);
-    page_entry_t *tentry = &pte[TIDX(vaddr)];
-
-    entry_init(tentry, IDX(paddr));
-
-    BMB;
-
-    char *ptr = (char *)(0x4000000);
-    ptr[0] = 'a';
-
-    BMB;
-
-    entry_init(tentry, IDX(0x1500000));
-    flush_tlb(vaddr);
-
-    BMB;
-
-    ptr[2] = 'b';
-
-    BMB;
-}
+KernelVirtualMemory::~KernelVirtualMemory() { }
