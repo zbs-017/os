@@ -14,5 +14,10 @@ _start:
     call gdt_init
     call memory_init
     call kernel_init
+
+    xchg bx, bx
+
+    mov eax, 0
+    int 0x80
     
     jmp $

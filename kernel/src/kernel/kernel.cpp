@@ -8,6 +8,7 @@ extern "C" {
     void time_init();
     void rtc_init();
     void memory_map_init();
+    void syscall_init();
     void hang();
 }
 
@@ -74,8 +75,11 @@ extern "C" void kernel_init() {
     TaskManager::create(kernel_virtual_memory, thread_b, "b", 5, KERNEL_USER);
     TaskManager::create(kernel_virtual_memory, thread_c, "c", 5, KERNEL_USER);
 
-    // 打开中断
-    set_interrupt_state(true);
+    // 初始化系统调用
+    syscall_init();
 
-    hang();
+    // 打开中断
+    // set_interrupt_state(true);
+
+    // hang();
 }

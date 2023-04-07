@@ -38,6 +38,9 @@ interrupt_entry:
     ; 调用由高级语言实现的中断处理函数
     call [handler_table + eax * 4]
 
+global interrupt_exit
+interrupt_exit:
+
     ; 对应 push eax，调用结束恢复栈
     add esp, 4
 
@@ -163,3 +166,45 @@ handler_entry_table:
     dd interrupt_handler_0x2d
     dd interrupt_handler_0x2e
     dd interrupt_handler_0x2f
+
+section .text
+
+extern syscall_check
+extern syscall_table
+global syscall_handler
+syscall_handler:
+    xchg bx, bx
+
+    ; 验证系统调用号
+    push eax
+    call syscall_check
+    add esp, 4
+
+    push 0x20222202
+
+    push 0x80
+
+    push ds
+    push es
+    push fs
+    push gs
+    pusha
+
+    push 0x80  ; 向中断处理函数传递中断向量参数
+    xchg bx, bx
+
+    push edx; 3
+    push ecx; 2
+    push ebx; 1
+
+    ; 调用系统调用处理函数，syscall_table 中存储了系统调用处理函数的指针
+    call [syscall_table + eax * 4]
+
+    xchg bx, bx
+    add esp, 12; 系统调用结束恢复栈
+
+    ; 修改栈中 eax 寄存器，设置系统调用返回值
+    mov dword [esp + 8 * 4], eax
+
+    ; 跳转到中断返回
+    jmp interrupt_exit
