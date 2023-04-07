@@ -11,6 +11,7 @@ extern "C" {
     void memory_map_init();
     void syscall_init();
     void hang();
+    void list_test(KernelVirtualMemory kvm);
 }
 
 #include <os/debug.h>
@@ -82,8 +83,11 @@ extern "C" void kernel_init() {
     // 初始化系统调用
     syscall_init();
 
+    // 测试 链表
+    list_test(kernel_virtual_memory);
+
     // 打开中断
-    set_interrupt_state(true);
+    // set_interrupt_state(true);
 
     // hang();
 }
