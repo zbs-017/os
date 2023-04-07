@@ -2,16 +2,14 @@
 #include <os/string.h>
 #include <os/assert.h>
 
-Bitmap::Bitmap(u8* bits, u32 length, u32 offset) {
-    this->bits = bits;
-    this->length = length;
-    this->offset = offset;
-    this->init();
-}
+Bitmap::Bitmap() { }
 
 Bitmap::~Bitmap() { }
 
-void Bitmap::init() {
+void Bitmap::init(u8* bits, u32 length, u32 offset) {
+    this->bits = bits;
+    this->length = length;
+    this->offset = offset;
     String::memset(this->bits, 0, this->length);
 }
 
@@ -105,26 +103,4 @@ int Bitmap::scan(u32 count) {
 
     // 然后返回索引
     return start + this->offset;
-}
-
-#include <os/debug.h>
-
-#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
-
-#define LEN 2
-u8 buf[LEN];
-Bitmap map = Bitmap(buf, LEN, 0);
-
-extern "C" void bitmap_test()
-{
-    for (size_t i = 0; i < 33; i++)
-    {
-        idx_t idx = map.scan(1);
-        if (idx == EOF)
-        {
-            LOGK("TEST FINISH\n");
-            break;
-        }
-        LOGK("%d\n", idx);
-    }
 }

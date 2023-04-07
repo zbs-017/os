@@ -3,6 +3,7 @@
 
 #include <os/types.h>
 #include <os/assert.h>
+#include <os/bitmap.h>
 
 extern "C" {
     void memory_init(u32 magic, u32 addr);
@@ -55,16 +56,6 @@ class VirtualMemory {
         VirtualMemory();
         ~VirtualMemory();
 
-};
-
-class KernelVirtualMemory : public VirtualMemory {
-    private:
-        page_entry_t* pde;
-
-    public:
-        KernelVirtualMemory();
-        ~KernelVirtualMemory();
-
         /* 获取 cr3 寄存器 */
         u32  get_cr3() {
             // 直接将 mov eax, cr3，返回值在 eax 中
@@ -94,8 +85,31 @@ class KernelVirtualMemory : public VirtualMemory {
                         : "memory");
         }
 
+};
+
+class KernelVirtualMemory : public VirtualMemory {
+    private:
+        page_entry_t* pde;
+        Bitmap kernel_map;
+
+    public:
+        KernelVirtualMemory();
+        ~KernelVirtualMemory();
+
         void entry_init(page_entry_t *entry, u32 index);
-        void add_page_table(u32 vaddr, u32 paddr);
+
+        /* 分配 count 个连续的内存页 */
+        u32 alloc_kpage(u32 count);
+
+        /* 释放 count 个连续的内核页 */
+        void free_kpage(u32 vaddr, u32 count);
+
+    protected:
+        /* 从位图中扫描 count 个连续的页 */
+        u32 scan_page(u32 count);
+        
+        /* 在位图中释放从 addr 开始的连续 count 个页 */
+        void reset_page(u32 addr, u32 count);
 };
 
 #endif

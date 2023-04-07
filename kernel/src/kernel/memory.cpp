@@ -152,6 +152,11 @@ VirtualMemory::~VirtualMemory() { }
 
 KernelVirtualMemory::KernelVirtualMemory() {
 
+    // 内核虚拟内存位图
+    u32 length = (IDX(KERNEL_MEMORY_SIZE) - IDX(MEMORY_BASE)) / 8;
+    kernel_map.init((u8*)0x4000, length, IDX(MEMORY_BASE));
+    kernel_map.scan(PhysicalMemory::memory_map_pages);
+
     // 内核页目录
     pde = (page_entry_t *)KERNEL_PAGE_DIR;
     String::memset(pde, 0, PAGE_SIZE);
@@ -199,6 +204,44 @@ void KernelVirtualMemory::entry_init(page_entry_t *entry, u32 index) {
     entry->write = 1;       // 可写
     entry->user = 1;        // 所有人都可访问
     entry->index = index;   // 页表索引
+}
+
+/* 分配 count 个连续的内存页 */
+u32 KernelVirtualMemory::alloc_kpage(u32 count) {
+    assert(count > 0);
+    u32 vaddr = scan_page(count);
+    LOGK("ALLOC kernel pages 0x%p count %d\n", vaddr, count);
+    return vaddr;
+}
+
+/* 释放 count 个连续的内核页 */
+void KernelVirtualMemory::free_kpage(u32 vaddr, u32 count) {
+    ASSERT_PAGE(vaddr);
+    assert(count > 0);
+    reset_page(vaddr, count);
+    LOGK("FREE  kernel pages 0x%p count %d\n", vaddr, count);
+}
+
+/* 从位图中扫描 count 个连续的页 */
+u32 KernelVirtualMemory::scan_page(u32 count) {
+    u32 index = kernel_map.scan(count);
+    if (index == EOF) {
+        panic("Scan page fail!!\n");
+    }
+
+    u32 addr = PAGE(index);
+    LOGK("Scan page 0x%p count %d\n", addr, count);
+    return addr;
+}
+
+/* 在位图中释放从 addr 开始的连续 count 个页 */
+void KernelVirtualMemory::reset_page(u32 addr, u32 count) {
+    u32 index = IDX(addr);
+
+    for (size_t i = 0; i < count; i++) {
+        assert(kernel_map.test(index+i));
+        kernel_map.set(index + i, 0);
+    }
 }
 
 KernelVirtualMemory::~KernelVirtualMemory() { }

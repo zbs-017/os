@@ -7,8 +7,23 @@ extern "C" {
     void time_init();
     void rtc_init();
     void memory_map_init();
-    void mapping_init();
     void hang();
+}
+
+#include <os/debug.h>
+#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
+
+void test_kernel_virtual_memory_bitmap(KernelVirtualMemory& kvm) {
+    u32* pages = (u32*)0x200000;  // 分配到的页的存放位置
+    u32 count = 0x6fe;
+    for (size_t i = 0; i < count; i++) {
+        pages[i] = kvm.alloc_kpage(1);
+        LOGK("0x%x\n", i);
+    }
+
+    for (size_t i = 0; i < count; i++){
+        kvm.free_kpage(pages[i], 1);
+    }
 }
 
 extern "C" void kernel_init() {
@@ -31,6 +46,7 @@ extern "C" void kernel_init() {
     // 初始化实时时钟
     // rtc_init();
 
+    test_kernel_virtual_memory_bitmap(kernel_virtual_memory);
 
     // asm volatile("sti");
     hang();
