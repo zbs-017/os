@@ -7,23 +7,6 @@
 
 typedef u32 target_t();
 
-typedef struct task_t
-{
-    // 任务开始的地方，保存了栈顶指针
-    u32 *stack; // 内核栈
-} task_t;
-
-typedef struct task_frame_t
-{
-    u32 edi;
-    u32 esi;
-    u32 ebx;
-    u32 ebp;
-    u32 (*eip)(void);
-} task_frame_t;
-
-void task_init();
-
 #define KERNEL_USER 0
 #define NORMAL_USER 1
 

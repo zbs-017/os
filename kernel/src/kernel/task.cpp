@@ -6,27 +6,7 @@
 
 #define PAGE_SIZE 0x1000
 
-task_t *a = (task_t *)0x1000;
-task_t *b = (task_t *)0x2000;
-
-extern "C" void task_switch(task_t *next);
 extern "C" void switch_task(task* next);
-
-task_t *running_task()
-{
-    // esp 中存放着当前的栈顶指针
-    // 通过栈顶指针的内存位置可以判断当前执行的是哪个程序
-    asm volatile(
-        "movl %esp, %eax\n"
-        "andl $0xfffff000, %eax\n");
-}
-
-void schedule()
-{
-    task_t *current = running_task();
-    task_t *next = current == a ? b : a;
-    task_switch(next);
-}
 
 task* TaskManager::task_table[NR_TASKS];
 
