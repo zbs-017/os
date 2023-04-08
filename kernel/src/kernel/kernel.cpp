@@ -13,6 +13,7 @@ extern "C" {
     void hang();
     void init_thread();
     void idle_thread();
+    void keyboard_init();
 }
 
 #include <os/debug.h>
@@ -46,6 +47,9 @@ extern "C" void kernel_init() {
 
     // 初始化系统调用
     syscall_init();
+
+    // 初始化键盘中断
+    keyboard_init();
 
     // 打开中断
     set_interrupt_state(true);
