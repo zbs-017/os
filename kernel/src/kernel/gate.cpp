@@ -2,10 +2,13 @@
 #include <os/assert.h>
 #include <os/debug.h>
 #include <os/syscall.h>
+#include <os/task.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
 #define SYSCALL_SIZE 64
+
+task* t = nullptr;
 
 extern "C" {
 
@@ -28,7 +31,16 @@ extern "C" {
 
     static u32 sys_test()
     {
-        LOGK("syscall test...\n");
+        // LOGK("syscall test...\n");
+
+        if (!t) {
+            t = TaskManager::running_task();
+            TaskManager::task_block(t, nullptr, TASK_BLOCKED);
+        } else {
+            TaskManager::task_unblock(t);
+            t = nullptr;
+        }
+
         return 255;
     }
 

@@ -3,6 +3,7 @@
 #include <os/string.h>
 #include <os/interrupt.h>
 #include <os/assert.h>
+#include <os/list.h>
 
 #define PAGE_SIZE 0x1000
 
@@ -13,11 +14,14 @@ extern "C" void task_yield() {
 }
 
 task* TaskManager::task_table[NR_TASKS];
+list_t TaskManager::block_list;
 
 TaskManager::TaskManager() { }
 TaskManager::~TaskManager() { }
 
 void TaskManager::init(KernelVirtualMemory& kvm) {
+    list_init(&TaskManager::block_list);
+    
     task* t = running_task();
     t->magic = OS_MAGIC;
     t->ticks = 1;   // 调度完初始化任务后，就开始调度其他任务
@@ -110,4 +114,36 @@ void TaskManager::schedule() {
     if (next == current) return;
 
     switch_task(next);
+}
+
+void TaskManager::task_block(task* t, list_t* blist, task_state state) {
+    assert(!get_interrupt_state());
+    assert(t->node.prev == nullptr);
+    assert(t->node.prev == nullptr);
+
+    if (blist == nullptr) {
+        blist = &TaskManager::block_list;
+    }
+
+    list_push(blist, &t->node);  // 加入阻塞队列
+
+    assert(state != TASK_READY && state != TASK_RUNNING);
+
+    t->state = state;
+
+    task* current = TaskManager::running_task();
+    if (current == t) {
+        TaskManager::schedule();
+    }
+}
+
+void TaskManager::task_unblock(task* t) {
+    assert(!get_interrupt_state());
+
+    list_remove(&t->node);
+
+    assert(t->node.next == nullptr);
+    assert(t->node.prev == nullptr);
+
+    t->state = TASK_READY;
 }
