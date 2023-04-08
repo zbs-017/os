@@ -15,13 +15,19 @@ extern "C" void task_yield() {
 
 task* TaskManager::task_table[NR_TASKS];
 list_t TaskManager::block_list;
+task* TaskManager::idle_task = nullptr;
 
 TaskManager::TaskManager() { }
 TaskManager::~TaskManager() { }
 
 void TaskManager::init(KernelVirtualMemory& kvm) {
+
+    for (size_t i = 0; i < NR_TASKS; i++) {
+        task_table[i] = nullptr;
+    }
+
     list_init(&TaskManager::block_list);
-    
+
     task* t = running_task();
     t->magic = OS_MAGIC;
     t->ticks = 1;   // 调度完初始化任务后，就开始调度其他任务
@@ -88,6 +94,11 @@ task* TaskManager::task_search(task_state state) {
         if (ptr == current) continue;
         if (t == nullptr || t->ticks < ptr->ticks || ptr->jiffies < t->jiffies)
             t = ptr;
+    }
+
+    // 如果当前所有任务都阻塞，就执行空闲任务
+    if (t == nullptr && state == TASK_READY) {
+        t = TaskManager::idle_task;
     }
 
     return t;
