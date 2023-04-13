@@ -53,4 +53,37 @@ bool list_empty(list_t *list);
 // 获得链表长度
 u32 list_size(list_t *list);
 
+class ListNode {
+    public:
+        ListNode *prev;
+        ListNode *next;
+
+    public:
+        ListNode();
+        ListNode(ListNode *prev, ListNode *next);
+        ~ListNode();
+};
+
+class List {
+    private:
+        ListNode head;
+        ListNode tail;
+    
+    public:
+        List();
+        ~List();
+
+        void insert_before(ListNode *anchor, ListNode *node);
+        void insert_after(ListNode *anchor, ListNode *node);
+        void push(ListNode *node);
+        ListNode *pop();
+        void push_back(ListNode *node);
+        ListNode *pop_back();
+        bool search(ListNode *node);
+        void remove(ListNode *node);
+        bool empty();
+        u32 length();
+        u32 size();
+};
+
 #endif
