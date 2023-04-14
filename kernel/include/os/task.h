@@ -52,6 +52,7 @@ class TaskManager {
     public:
         static task* task_table[NR_TASKS];  // 任务表
         static List block_list;             // 任务阻塞链表
+        static task *idle_task;             // 空闲任务，基础任务
 
         TaskManager();
         ~TaskManager();

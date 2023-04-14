@@ -14,6 +14,7 @@ extern "C" void task_yield() {
 
 task* TaskManager::task_table[NR_TASKS];
 List TaskManager::block_list;  // 这里只是分配内存，没有调用构造函数（或者调用的是默认构造函数）
+task *TaskManager::idle_task = nullptr;
 
 TaskManager::TaskManager() { }
 TaskManager::~TaskManager() { }
@@ -87,6 +88,11 @@ task* TaskManager::task_search(task_state state) {
         if (ptr == current) continue;
         if (t == nullptr || t->ticks < ptr->ticks || ptr->jiffies < t->jiffies)
             t = ptr;
+    }
+
+    // 如果当前任务都阻塞，就执行空闲任务
+    if (t == nullptr && state == TASK_READY) {
+        t = idle_task;
     }
 
     return t;

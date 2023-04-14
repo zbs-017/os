@@ -11,48 +11,13 @@ extern "C" {
     void memory_map_init();
     void syscall_init();
     void hang();
-    void list_test(KernelVirtualMemory kvm);
+    void init_thread();
+    void idle_thread();
 }
 
 #include <os/debug.h>
 #include <os/interrupt.h>
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
-
-u32 _ofp thread_a()
-{
-    set_interrupt_state(true);
-
-    Log log = Log();
-    while (true)
-    {
-        log.printk("A");
-        test();
-    }
-}
-
-u32 _ofp thread_b()
-{
-    set_interrupt_state(true);
-
-    Log log = Log();
-    while (true)
-    {
-        log.printk("B");
-        test();
-    }
-}
-
-u32 _ofp thread_c()
-{
-    set_interrupt_state(true);
-
-    Log log = Log();
-    while (true)
-    {
-        log.printk("C");
-        test();
-    }
-}
 
 extern "C" void kernel_init() {
 
@@ -76,9 +41,8 @@ extern "C" void kernel_init() {
 
     // 初始化任务
     TaskManager::init(kernel_virtual_memory);
-    TaskManager::create(kernel_virtual_memory, thread_a, "a", 5, KERNEL_USER);
-    TaskManager::create(kernel_virtual_memory, thread_b, "b", 5, KERNEL_USER);
-    // TaskManager::create(kernel_virtual_memory, thread_c, "c", 5, KERNEL_USER);  // 如果任务过少，会造成没有任务可执行的情况
+    TaskManager::idle_task = TaskManager::create(kernel_virtual_memory, (target_t*)idle_thread, "idle", 1, KERNEL_USER);
+    TaskManager::create(kernel_virtual_memory, (target_t*)init_thread, "init", 5, NORMAL_USER);
 
     // 初始化系统调用
     syscall_init();
