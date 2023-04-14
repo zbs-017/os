@@ -13,6 +13,7 @@ extern "C" void task_yield() {
 }
 
 task* TaskManager::task_table[NR_TASKS];
+List TaskManager::block_list;  // 这里只是分配内存，没有调用构造函数（或者调用的是默认构造函数）
 
 TaskManager::TaskManager() { }
 TaskManager::~TaskManager() { }
@@ -24,6 +25,8 @@ void TaskManager::init(KernelVirtualMemory& kvm) {
 
     // 初始化任务表
     String::memset(TaskManager::task_table, 0, sizeof(TaskManager::task_table));
+    // 初始化睡眠链表
+    block_list = List();  // 需要在这里进行初始化
 }
 
 task* TaskManager::create(KernelVirtualMemory& kvm, target_t target, const char *name, u32 priority, u32 uid) {
@@ -110,4 +113,32 @@ void TaskManager::schedule() {
     if (next == current) return;
 
     switch_task(next);
+}
+
+void TaskManager::task_block(task *t, task_state state) {
+    assert(!get_interrupt_state());
+    assert(t->node.prev == nullptr);
+    assert(t->node.prev == nullptr);
+
+    block_list.push(&t->node);  // 加入阻塞队列
+
+    assert(state != TASK_READY && state != TASK_RUNNING);
+
+    t->state = state;
+
+    task *current = running_task();
+    if (current == t) {
+        schedule();
+    }
+}
+
+void TaskManager::task_unblock(task *t) {
+    assert(!get_interrupt_state());
+
+    block_list.remove(&t->node);
+
+    assert(t->node.next == nullptr);
+    assert(t->node.prev == nullptr);
+
+    t->state = TASK_READY;
 }

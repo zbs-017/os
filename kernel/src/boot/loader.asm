@@ -105,7 +105,7 @@ protect_mode:
     ; 读取内核
     mov ebx, 10
     mov edi, 0x10000
-    mov cx, 200
+    mov cx, 400
     .read_kernel:
         call read_disk
         inc ebx

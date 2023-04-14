@@ -12,7 +12,7 @@ static void spin(char *name)
         ;
 }
 
-void assertion_failure(char *exp, char *file, char *base, int line)
+void assertion_failure(const char *exp, const char *file, const char *base, int line)
 {
     Log log = Log();
     log.printk(

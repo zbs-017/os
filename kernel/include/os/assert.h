@@ -4,7 +4,7 @@
 #include <os/types.h>
 #include <os/log.h>
 
-void assertion_failure(char *exp, char *file, char *base, int line);
+void assertion_failure(const char *exp, const char *file, const char *base, int line);
 
 #define assert(exp) \
     if (exp)        \

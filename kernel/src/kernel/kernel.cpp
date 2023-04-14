@@ -26,7 +26,7 @@ u32 _ofp thread_a()
     while (true)
     {
         log.printk("A");
-        yield();
+        test();
     }
 }
 
@@ -38,7 +38,7 @@ u32 _ofp thread_b()
     while (true)
     {
         log.printk("B");
-        yield();
+        test();
     }
 }
 
@@ -50,7 +50,7 @@ u32 _ofp thread_c()
     while (true)
     {
         log.printk("C");
-        yield();
+        test();
     }
 }
 
@@ -83,11 +83,8 @@ extern "C" void kernel_init() {
     // 初始化系统调用
     syscall_init();
 
-    // 测试 链表
-    list_test(kernel_virtual_memory);
-
     // 打开中断
-    // set_interrupt_state(true);
+    set_interrupt_state(true);
 
     // hang();
 }

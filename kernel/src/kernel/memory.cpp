@@ -111,7 +111,6 @@ u32 PhysicalMemory::get_page() {
         {
             memory_map[i] = 1;
             free_pages--;
-            assert(free_pages >= 0);
             u32 page = ((u32)i) << 12;
             LOGK("GET page 0x%p\n", page);
             return page;
