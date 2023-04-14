@@ -2,15 +2,19 @@
 #include <os/list.h>
 #include <os/assert.h>
 
-ListNode::ListNode() { }
-
-ListNode::ListNode(ListNode *prev, ListNode *next)
-    : prev(prev), next(next) { }
+ListNode::ListNode() {
+    this->prev = nullptr;
+    this->next = nullptr;
+}
 
 ListNode::~ListNode() { }
 
-List::List()
-    : head(nullptr, &this->tail), tail(&this->head, nullptr) { }
+List::List() {
+    this->head.prev = nullptr;
+    this->head.next = &tail;
+    this->tail.prev = &head;
+    this->tail.next = nullptr;
+}
 
 List::~List() { }
 

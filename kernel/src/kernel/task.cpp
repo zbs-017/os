@@ -12,9 +12,13 @@ extern "C" void task_yield() {
     TaskManager::schedule();
 }
 
+extern "C" u32 volatile jiffies;
+extern "C" u32 jiffy;
+
 task* TaskManager::task_table[NR_TASKS];
 List TaskManager::block_list;  // 这里只是分配内存，没有调用构造函数（或者调用的是默认构造函数）
 task *TaskManager::idle_task = nullptr;
+List TaskManager::sleep_list;
 
 TaskManager::TaskManager() { }
 TaskManager::~TaskManager() { }
@@ -28,6 +32,11 @@ void TaskManager::init(KernelVirtualMemory& kvm) {
     String::memset(TaskManager::task_table, 0, sizeof(TaskManager::task_table));
     // 初始化睡眠链表
     block_list = List();  // 需要在这里进行初始化
+    block_list.head.next = &block_list.tail;
+    block_list.tail.prev = &block_list.head;
+    sleep_list = List();  // 初始化睡眠链表
+    sleep_list.head.next = &sleep_list.tail;
+    sleep_list.tail.prev = &sleep_list.head;
 }
 
 task* TaskManager::create(KernelVirtualMemory& kvm, target_t target, const char *name, u32 priority, u32 uid) {
@@ -148,3 +157,61 @@ void TaskManager::task_unblock(task *t) {
 
     t->state = TASK_READY;
 }
+
+void TaskManager::task_sleep(u32 ms) {
+    assert(!get_interrupt_state()); // 不可中断
+
+    u32 ticks = ms / jiffy;        // 需要睡眠的时间片
+    ticks = ticks > 0 ? ticks : 1; // 至少休眠一个时间片
+
+    // 记录目标全局时间片，在那个时刻需要唤醒任务
+    task* current = running_task();
+    current->ticks = jiffies + ticks;
+
+    // 从睡眠链表找到第一个比当前任务唤醒时间点更晚的任务，进行插入排序
+    ListNode *anchor = &sleep_list.tail;
+
+    for (ListNode *ptr = sleep_list.head.next; ptr != &sleep_list.tail; ptr = ptr->next)
+    {
+        task* t = element_entry(task, node, ptr);
+
+        if (t->ticks > current->ticks)
+        {
+            anchor = ptr;
+            break;
+        }
+    }
+
+    assert(current->node.next == nullptr);
+    assert(current->node.prev == nullptr);
+
+    // 插入链表
+    sleep_list.insert_before(anchor, &current->node);
+
+    // 阻塞状态是睡眠
+    current->state = TASK_SLEEPING;
+
+    // 调度执行其他任务
+    schedule();
+}
+
+void TaskManager::task_wakeup() {
+    assert(!get_interrupt_state()); // 不可中断
+
+    // 从睡眠链表中找到 ticks 小于等于 jiffies 的任务，恢复执行
+    for (ListNode *ptr = sleep_list.head.next; ptr != &sleep_list.tail;)
+    {
+        task* t = element_entry(task, node, ptr);
+        if (t->ticks > jiffies)
+        {
+            break;
+        }
+
+        // unblock 会将指针清空
+        ptr = ptr->next;
+
+        t->ticks = 0;
+        task_unblock(t);
+    }
+}
+

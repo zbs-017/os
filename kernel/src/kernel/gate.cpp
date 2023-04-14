@@ -52,6 +52,7 @@ extern "C" {
         }
 
         syscall_table[SYS_NR_TEST] = (void*)sys_test;
+        syscall_table[SYS_NR_SLEEP] = (void*)TaskManager::task_sleep;
         syscall_table[SYS_NR_YIELD] = (void*)task_yield;
     }
 }

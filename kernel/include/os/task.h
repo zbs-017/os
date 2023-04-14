@@ -53,6 +53,7 @@ class TaskManager {
         static task* task_table[NR_TASKS];  // 任务表
         static List block_list;             // 任务阻塞链表
         static task *idle_task;             // 空闲任务，基础任务
+        static List sleep_list;             // 睡眠任务链表
 
         TaskManager();
         ~TaskManager();
@@ -66,6 +67,8 @@ class TaskManager {
         static task* task_search(task_state state);
         static void task_block(task *t, task_state state);
         static void task_unblock(task *t);
+        static void task_sleep(u32 ms);
+        static void task_wakeup();
 
 };
 

@@ -13,6 +13,7 @@ extern "C" {
     void hang();
     void init_thread();
     void idle_thread();
+    void test_thread();
 }
 
 #include <os/debug.h>
@@ -43,6 +44,7 @@ extern "C" void kernel_init() {
     TaskManager::init(kernel_virtual_memory);
     TaskManager::idle_task = TaskManager::create(kernel_virtual_memory, (target_t*)idle_thread, "idle", 1, KERNEL_USER);
     TaskManager::create(kernel_virtual_memory, (target_t*)init_thread, "init", 5, NORMAL_USER);
+    TaskManager::create(kernel_virtual_memory, (target_t*)test_thread, "test", 5, NORMAL_USER);
 
     // 初始化系统调用
     syscall_init();

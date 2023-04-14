@@ -13,12 +13,11 @@ class ListNode {
 
     public:
         ListNode();
-        ListNode(ListNode *prev, ListNode *next);
         ~ListNode();
 };
 
 class List {
-    private:
+    public:
         ListNode head;
         ListNode tail;
     
@@ -37,6 +36,7 @@ class List {
         bool empty();
         u32 length();
         u32 size();
+
 };
 
 #endif
