@@ -16,7 +16,7 @@ extern "C" u32 volatile jiffies;
 extern "C" u32 jiffy;
 
 task* TaskManager::task_table[NR_TASKS];
-List TaskManager::block_list;  // 这里只是分配内存，没有调用构造函数（或者调用的是默认构造函数）
+List TaskManager::block_list;  // 这里调用的是默认构造函数
 task *TaskManager::idle_task = nullptr;
 List TaskManager::sleep_list;
 
@@ -31,10 +31,9 @@ void TaskManager::init(KernelVirtualMemory& kvm) {
     // 初始化任务表
     String::memset(TaskManager::task_table, 0, sizeof(TaskManager::task_table));
     // 初始化睡眠链表
-    block_list = List();  // 需要在这里进行初始化
     block_list.head.next = &block_list.tail;
     block_list.tail.prev = &block_list.head;
-    sleep_list = List();  // 初始化睡眠链表
+    // 初始化睡眠链表
     sleep_list.head.next = &sleep_list.tail;
     sleep_list.tail.prev = &sleep_list.head;
 }
