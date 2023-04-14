@@ -73,7 +73,7 @@ char* Log::number(char *str, unsigned long num, int base, int size, int precisio
     c = (flags & ZEROPAD) ? '0' : ' ';
 
     // 如果 flags 指出是带符号数并且数值 num 小于 0，则置符号变量 sign=负号，并使 num 取绝对值
-    if (flags & SIGN)
+    if (flags & SIGN && num < 0)
     {
         sign = '-';
         num = -num;
