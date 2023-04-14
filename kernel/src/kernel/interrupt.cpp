@@ -31,28 +31,28 @@ extern handler_t handler_entry_table[ENTRY_SIZE];  // 中断处理函数指针�
 extern "C" void syscall_handler();
 
 static char* messages[] = {
-    "#DE Divide Error\0",
-    "#DB RESERVED\0",
-    "--  NMI Interrupt\0",
-    "#BP Breakpoint\0",
-    "#OF Overflow\0",
-    "#BR BOUND Range Exceeded\0",
-    "#UD Invalid Opcode (Undefined Opcode)\0",
-    "#NM Device Not Available (No Math Coprocessor)\0",
-    "#DF Double Fault\0",
-    "    Coprocessor Segment Overrun (reserved)\0",
-    "#TS Invalid TSS\0",
-    "#NP Segment Not Present\0",
-    "#SS Stack-Segment Fault\0",
-    "#GP General Protection\0",
-    "#PF Page Fault\0",
-    "--  (Intel reserved. Do not use.)\0",
-    "#MF x87 FPU Floating-Point Error (Math Fault)\0",
-    "#AC Alignment Check\0",
-    "#MC Machine Check\0",
-    "#XF SIMD Floating-Point Exception\0",
-    "#VE Virtualization Exception\0",
-    "#CP Control Protection Exception\0",
+    (char*)"#DE Divide Error\0",
+    (char*)"#DB RESERVED\0",
+    (char*)"--  NMI Interrupt\0",
+    (char*)"#BP Breakpoint\0",
+    (char*)"#OF Overflow\0",
+    (char*)"#BR BOUND Range Exceeded\0",
+    (char*)"#UD Invalid Opcode (Undefined Opcode)\0",
+    (char*)"#NM Device Not Available (No Math Coprocessor)\0",
+    (char*)"#DF Double Fault\0",
+    (char*)"    Coprocessor Segment Overrun (reserved)\0",
+    (char*)"#TS Invalid TSS\0",
+    (char*)"#NP Segment Not Present\0",
+    (char*)"#SS Stack-Segment Fault\0",
+    (char*)"#GP General Protection\0",
+    (char*)"#PF Page Fault\0",
+    (char*)"--  (Intel reserved. Do not use.)\0",
+    (char*)"#MF x87 FPU Floating-Point Error (Math Fault)\0",
+    (char*)"#AC Alignment Check\0",
+    (char*)"#MC Machine Check\0",
+    (char*)"#XF SIMD Floating-Point Exception\0",
+    (char*)"#VE Virtualization Exception\0",
+    (char*)"#CP Control Protection Exception\0",
 };
 
 // 通知中断控制器，中断处理结束
@@ -71,13 +71,13 @@ void send_eoi(int vector)
 
 void set_interrupt_handler(u32 irq, handler_t handler)
 {
-    assert(irq >= 0 && irq < 16);
+    assert(irq < 16);
     handler_table[IRQ_MASTER_NR + irq] = handler;
 }
 
 void set_interrupt_mask(u32 irq, bool enable)
 {
-    assert(irq >= 0 && irq < 16);
+    assert(irq < 16);
     u16 port;
     if (irq < 8)
     {

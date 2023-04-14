@@ -222,7 +222,7 @@ void KernelVirtualMemory::free_kpage(u32 vaddr, u32 count) {
 
 /* 从位图中扫描 count 个连续的页 */
 u32 KernelVirtualMemory::scan_page(u32 count) {
-    u32 index = kernel_map.scan(count);
+    int index = kernel_map.scan(count);
     if (index == EOF) {
         panic("Scan page fail!!\n");
     }

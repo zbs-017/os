@@ -18,7 +18,11 @@ CXXFLAGS ?= -std=gnu++14 \
 			-Wall -Wextra \
 			-fno-pic \
 			-fno-pie \
-			-fno-stack-protector
+			-fno-stack-protector \
+			-Wno-unused-parameter \
+			-Wno-return-type \
+			-Wno-unused-but-set-variable \
+			-Wno-unused-variable
 CPPFLAGS += -I kernel/include 
 LDFLAGS += -static
 DEBUG = -g
