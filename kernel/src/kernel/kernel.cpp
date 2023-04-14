@@ -78,7 +78,7 @@ extern "C" void kernel_init() {
     TaskManager::init(kernel_virtual_memory);
     TaskManager::create(kernel_virtual_memory, thread_a, "a", 5, KERNEL_USER);
     TaskManager::create(kernel_virtual_memory, thread_b, "b", 5, KERNEL_USER);
-    TaskManager::create(kernel_virtual_memory, thread_c, "c", 5, KERNEL_USER);
+    // TaskManager::create(kernel_virtual_memory, thread_c, "c", 5, KERNEL_USER);  // 如果任务过少，会造成没有任务可执行的情况
 
     // 初始化系统调用
     syscall_init();
