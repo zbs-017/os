@@ -5,8 +5,8 @@ BUILD = build
 ENTRY = 0x10000
 
 # 使用交叉编译器
-CC = /home/zbs/dennix-toolchain/bin/i686-dennix-g++
-LD = /home/zbs/dennix-toolchain/bin/i686-dennix-ld
+CC = /home/zbs/Src/dennix-toolchain/bin/i686-dennix-g++
+LD = /home/zbs/Src/dennix-toolchain/bin/i686-dennix-ld
 CRTBEGIN_O := $(shell $(CC) $(CXXFLAGS) -print-file-name=crtbegin.o)
 CRTEND_O := $(shell $(CC) $(CXXFLAGS) -print-file-name=crtend.o)
 START_OBJ := $(BUILD)/boot/crti.o $(CRTBEGIN_O)
@@ -18,7 +18,11 @@ CXXFLAGS ?= -std=gnu++14 \
 			-Wall -Wextra \
 			-fno-pic \
 			-fno-pie \
-			-fno-stack-protector
+			-fno-stack-protector \
+			-Wno-unused-parameter \
+			-Wno-return-type \
+			-Wno-unused-but-set-variable \
+			-Wno-unused-variable
 CPPFLAGS += -I kernel/include 
 LDFLAGS += -static
 DEBUG = -g
@@ -52,8 +56,6 @@ QEMU = qemu-system-i386 \
 	-m 32M \
 	-boot c \
 	-drive file=$<,if=ide,index=0,media=disk,format=raw \
-	-audiodev pa,id=hda \
-	-machine pcspk-audiodev=hda \
 	-rtc base=localtime \
 
 all: $(BUILD)/master.img $(BUILD)/system.map
@@ -93,7 +95,7 @@ $(BUILD)/%.img: $(BUILD)/boot/boot.bin \
 # 测试 system.bin 小于 100k，否则修改下面命令中的 count 的大小
 	test -n "$$(find $(BUILD)/system.bin -size -100k)"
 # 将内核二进制文件写入硬盘
-	dd if=$(BUILD)/system.bin of=$@ bs=512 seek=10 count=200 conv=notrunc
+	dd if=$(BUILD)/system.bin of=$@ bs=512 seek=10 count=400 conv=notrunc
 
 bochs: $(BUILD)/master.img
 	bochs -q

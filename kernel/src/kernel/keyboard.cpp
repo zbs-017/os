@@ -1,7 +1,7 @@
-#include <os/interrupt.h>
 #include <os/assert.h>
-#include <os/io.h>
 #include <os/debug.h>
+#include <os/interrupt.h>
+#include <os/io.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -12,106 +12,105 @@
 
 #define CODE_PRINT_SCREEN_DOWN 0xB7
 
-typedef enum
-{
-    KEY_NONE,
-    KEY_ESC,
-    KEY_1,
-    KEY_2,
-    KEY_3,
-    KEY_4,
-    KEY_5,
-    KEY_6,
-    KEY_7,
-    KEY_8,
-    KEY_9,
-    KEY_0,
-    KEY_MINUS,
-    KEY_EQUAL,
-    KEY_BACKSPACE,
-    KEY_TAB,
-    KEY_Q,
-    KEY_W,
-    KEY_E,
-    KEY_R,
-    KEY_T,
-    KEY_Y,
-    KEY_U,
-    KEY_I,
-    KEY_O,
-    KEY_P,
-    KEY_BRACKET_L,
-    KEY_BRACKET_R,
-    KEY_ENTER,
-    KEY_CTRL_L,
-    KEY_A,
-    KEY_S,
-    KEY_D,
-    KEY_F,
-    KEY_G,
-    KEY_H,
-    KEY_J,
-    KEY_K,
-    KEY_L,
-    KEY_SEMICOLON,
-    KEY_QUOTE,
-    KEY_BACKQUOTE,
-    KEY_SHIFT_L,
-    KEY_BACKSLASH,
-    KEY_Z,
-    KEY_X,
-    KEY_C,
-    KEY_V,
-    KEY_B,
-    KEY_N,
-    KEY_M,
-    KEY_COMMA,
-    KEY_POINT,
-    KEY_SLASH,
-    KEY_SHIFT_R,
-    KEY_STAR,
-    KEY_ALT_L,
-    KEY_SPACE,
-    KEY_CAPSLOCK,
-    KEY_F1,
-    KEY_F2,
-    KEY_F3,
-    KEY_F4,
-    KEY_F5,
-    KEY_F6,
-    KEY_F7,
-    KEY_F8,
-    KEY_F9,
-    KEY_F10,
-    KEY_NUMLOCK,
-    KEY_SCRLOCK,
-    KEY_PAD_7,
-    KEY_PAD_8,
-    KEY_PAD_9,
-    KEY_PAD_MINUS,
-    KEY_PAD_4,
-    KEY_PAD_5,
-    KEY_PAD_6,
-    KEY_PAD_PLUS,
-    KEY_PAD_1,
-    KEY_PAD_2,
-    KEY_PAD_3,
-    KEY_PAD_0,
-    KEY_PAD_POINT,
-    KEY_54,
-    KEY_55,
-    KEY_56,
-    KEY_F11,
-    KEY_F12,
-    KEY_59,
-    KEY_WIN_L,
-    KEY_WIN_R,
-    KEY_CLIPBOARD,
-    KEY_5D,
-    KEY_5E,
+typedef enum {
+  KEY_NONE,
+  KEY_ESC,
+  KEY_1,
+  KEY_2,
+  KEY_3,
+  KEY_4,
+  KEY_5,
+  KEY_6,
+  KEY_7,
+  KEY_8,
+  KEY_9,
+  KEY_0,
+  KEY_MINUS,
+  KEY_EQUAL,
+  KEY_BACKSPACE,
+  KEY_TAB,
+  KEY_Q,
+  KEY_W,
+  KEY_E,
+  KEY_R,
+  KEY_T,
+  KEY_Y,
+  KEY_U,
+  KEY_I,
+  KEY_O,
+  KEY_P,
+  KEY_BRACKET_L,
+  KEY_BRACKET_R,
+  KEY_ENTER,
+  KEY_CTRL_L,
+  KEY_A,
+  KEY_S,
+  KEY_D,
+  KEY_F,
+  KEY_G,
+  KEY_H,
+  KEY_J,
+  KEY_K,
+  KEY_L,
+  KEY_SEMICOLON,
+  KEY_QUOTE,
+  KEY_BACKQUOTE,
+  KEY_SHIFT_L,
+  KEY_BACKSLASH,
+  KEY_Z,
+  KEY_X,
+  KEY_C,
+  KEY_V,
+  KEY_B,
+  KEY_N,
+  KEY_M,
+  KEY_COMMA,
+  KEY_POINT,
+  KEY_SLASH,
+  KEY_SHIFT_R,
+  KEY_STAR,
+  KEY_ALT_L,
+  KEY_SPACE,
+  KEY_CAPSLOCK,
+  KEY_F1,
+  KEY_F2,
+  KEY_F3,
+  KEY_F4,
+  KEY_F5,
+  KEY_F6,
+  KEY_F7,
+  KEY_F8,
+  KEY_F9,
+  KEY_F10,
+  KEY_NUMLOCK,
+  KEY_SCRLOCK,
+  KEY_PAD_7,
+  KEY_PAD_8,
+  KEY_PAD_9,
+  KEY_PAD_MINUS,
+  KEY_PAD_4,
+  KEY_PAD_5,
+  KEY_PAD_6,
+  KEY_PAD_PLUS,
+  KEY_PAD_1,
+  KEY_PAD_2,
+  KEY_PAD_3,
+  KEY_PAD_0,
+  KEY_PAD_POINT,
+  KEY_54,
+  KEY_55,
+  KEY_56,
+  KEY_F11,
+  KEY_F12,
+  KEY_59,
+  KEY_WIN_L,
+  KEY_WIN_R,
+  KEY_CLIPBOARD,
+  KEY_5D,
+  KEY_5E,
 
-    // 以下为自定义按键，为和 keymap 索引匹配
-    KEY_PRINT_SCREEN,
+  // 以下为自定义按键，为和 keymap 索引匹配
+  KEY_PRINT_SCREEN,
 } KEY;
 
 static char keymap[][4] = {
@@ -232,114 +231,99 @@ static bool extcode_state;  // 扩展码状态
 #define shift_state (keymap[KEY_SHIFT_L][2] || keymap[KEY_SHIFT_R][2])
 
 void keyboard_handler(int vector) {
-    assert(vector == 0x21);
-    send_eoi(vector); // 向中断控制器发送中断处理结束的信息
+  assert(vector == 0x21);
+  send_eoi(vector); // 向中断控制器发送中断处理结束的信息
 
-    // 接收扫描码
-    u16 scancode = inb(KEYBOARD_DATA_PORT);
-    u8 ext = 2; // keymap 状态索引，默认没有 shift 键
+  // 接收扫描码
+  u16 scancode = inb(KEYBOARD_DATA_PORT);
+  u8 ext = 2; // keymap 状态索引，默认没有 shift 键
 
-    // 是扩展码字节
-    if (scancode == 0xe0)
-    {
-        // 置扩展状态
-        extcode_state = true;
-        return;
-    }
+  // 是扩展码字节
+  if (scancode == 0xe0) {
+    // 置扩展状态
+    extcode_state = true;
+    return;
+  }
 
-    // 是扩展码
-    if (extcode_state)
-    {
-        // 改状态索引
-        ext = 3;
+  // 是扩展码
+  if (extcode_state) {
+    // 改状态索引
+    ext = 3;
 
-        // 修改扫描码，添加 0xe0 前缀
-        scancode |= 0xe000;
+    // 修改扫描码，添加 0xe0 前缀
+    scancode |= 0xe000;
 
-        // 扩展状态无效
-        extcode_state = false;
-    }
+    // 扩展状态无效
+    extcode_state = false;
+  }
 
-    // 获得通码
-    u16 makecode = (scancode & 0x7f);
-    if (makecode == CODE_PRINT_SCREEN_DOWN)
-    {
-        makecode = KEY_PRINT_SCREEN;
-    }
+  // 获得通码
+  u16 makecode = (scancode & 0x7f);
+  if (makecode == CODE_PRINT_SCREEN_DOWN) {
+    makecode = KEY_PRINT_SCREEN;
+  }
 
-    // 通码非法
-    if (makecode > KEY_PRINT_SCREEN)
-    {
-        return;
-    }
+  // 通码非法
+  if (makecode > KEY_PRINT_SCREEN) {
+    return;
+  }
 
-    // DEBUGK("scancode 0x%x\n", scancode);
+  // DEBUGK("scancode 0x%x\n", scancode);
 
-    // 是否是断码，按键抬起
-    bool breakcode = ((scancode & 0x0080) != 0);
-    if (breakcode)
-    {
-        // 如果是则设置状态
-        keymap[makecode][ext] = false;
-        return;
-    }
+  // 是否是断码，按键抬起
+  bool breakcode = ((scancode & 0x0080) != 0);
+  if (breakcode) {
+    // 如果是则设置状态
+    keymap[makecode][ext] = false;
+    return;
+  }
 
-    // 下面是通码，按键按下
-    keymap[makecode][ext] = true;
+  // 下面是通码，按键按下
+  keymap[makecode][ext] = true;
 
-    // 是否需要设置 LED 灯
-    bool led = false;
-    if (makecode == KEY_NUMLOCK)
-    {
-        numlock_state = !numlock_state;
-        led = true;
-    }
-    else if (makecode == KEY_CAPSLOCK)
-    {
-        capslock_state = !capslock_state;
-        led = true;
-    }
-    else if (makecode == KEY_SCRLOCK)
-    {
-        scrlock_state = !scrlock_state;
-        led = true;
-    }
+  // 是否需要设置 LED 灯
+  bool led = false;
+  if (makecode == KEY_NUMLOCK) {
+    numlock_state = !numlock_state;
+    led = true;
+  } else if (makecode == KEY_CAPSLOCK) {
+    capslock_state = !capslock_state;
+    led = true;
+  } else if (makecode == KEY_SCRLOCK) {
+    scrlock_state = !scrlock_state;
+    led = true;
+  }
 
-    // 计算 shift 状态
-    bool shift = false;
-    if (capslock_state)
-    {
-        shift = !shift;
-    }
-    if (shift_state)
-    {
-        shift = !shift;
-    }
+  // 计算 shift 状态
+  bool shift = false;
+  if (capslock_state) {
+    shift = !shift;
+  }
+  if (shift_state) {
+    shift = !shift;
+  }
 
-    // 获得按键 ASCII 码
-    char ch = 0;
-    // [/?] 这个键比较特殊，只有这个键扩展码和普通码一样
-    if (ext == 3 && (makecode != KEY_SLASH))
-    {
-        ch = keymap[makecode][1];
-    }
-    else
-    {
-        ch = keymap[makecode][shift];
-    }
+  // 获得按键 ASCII 码
+  char ch = 0;
+  // [/?] 这个键比较特殊，只有这个键扩展码和普通码一样
+  if (ext == 3 && (makecode != KEY_SLASH)) {
+    ch = keymap[makecode][1];
+  } else {
+    ch = keymap[makecode][shift];
+  }
 
-    if (ch == INV)
-        return;
+  if (ch == INV)
+    return;
 
-    LOGK("keydown %c \n", ch);
+  LOGK("keydown %c \n", ch);
 }
 
 extern "C" void keyboard_init() {
-    numlock_state = false;
-    scrlock_state = false;
-    capslock_state = false;
-    extcode_state = false;
+  numlock_state = false;
+  scrlock_state = false;
+  capslock_state = false;
+  extcode_state = false;
 
-    set_interrupt_handler(IRQ_KEYBOARD, (void*)keyboard_handler);
-    set_interrupt_mask(IRQ_KEYBOARD, true);
+  set_interrupt_handler(IRQ_KEYBOARD, (void *)keyboard_handler);
+  set_interrupt_mask(IRQ_KEYBOARD, true);
 }
