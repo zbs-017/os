@@ -45,6 +45,7 @@ KERNELFILES = $(BUILD)/kernel/start.o \
 				$(BUILD)/kernel/memory.o \
 				$(BUILD)/kernel/gate.o \
 				$(BUILD)/kernel/thread.o \
+				$(BUILD)/kernel/keyboard.o \
 				$(BUILD)/lib/string.o \
 				$(BUILD)/lib/stdlib.o \
 				$(BUILD)/lib/bitmap.o \
