@@ -8,7 +8,7 @@
 
 #define SYSCALL_SIZE 64
 
-task* t = nullptr;
+task *t = nullptr;
 
 extern "C" {
 
@@ -32,15 +32,15 @@ extern "C" {
     static u32 sys_test()
     {
         // LOGK("syscall test...\n");
-
+        
         if (!t) {
             t = TaskManager::running_task();
-            TaskManager::task_block(t, nullptr, TASK_BLOCKED);
+            TaskManager::task_block(t, TASK_BLOCKED);
         } else {
             TaskManager::task_unblock(t);
             t = nullptr;
         }
-
+        
         return 255;
     }
 
@@ -52,6 +52,7 @@ extern "C" {
         }
 
         syscall_table[SYS_NR_TEST] = (void*)sys_test;
+        syscall_table[SYS_NR_SLEEP] = (void*)TaskManager::task_sleep;
         syscall_table[SYS_NR_YIELD] = (void*)task_yield;
     }
 }

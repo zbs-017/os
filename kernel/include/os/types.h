@@ -14,6 +14,12 @@
 
 #define _inline __attribute__((always_inline)) inline
 
+#if __has_attribute(fallthrough)
+#define FALLTHROUGH __attribute__((fallthrough))
+#else
+#define FALLTHROUGH
+#endif
+
 typedef unsigned int size_t;
 
 typedef char int8;

@@ -4,7 +4,7 @@
 static u8 buf[1024];
 
 // 强制阻塞
-static void spin(char *name)
+static void spin(const char *name)
 {
     Log log = Log();
     log.printk("spinning in %s ...\n", name);
@@ -12,7 +12,7 @@ static void spin(char *name)
         ;
 }
 
-void assertion_failure(char *exp, char *file, char *base, int line)
+void assertion_failure(const char *exp, const char *file, const char *base, int line)
 {
     Log log = Log();
     log.printk(

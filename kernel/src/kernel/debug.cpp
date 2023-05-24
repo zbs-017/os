@@ -3,7 +3,7 @@
 
 static char buf[1024];
 
-void debugk(char *file, int line, const char *fmt, ...)
+void debugk(const char *file, int line, const char *fmt, ...)
 {
     Log log = Log();
     va_list args;

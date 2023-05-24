@@ -52,6 +52,7 @@ void clock_handler(int vector)
     assert(vector == 0x20);
     send_eoi(vector);
     stop_beep();
+    TaskManager::task_wakeup();
 
     jiffies++;
 

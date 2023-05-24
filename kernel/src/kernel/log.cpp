@@ -343,6 +343,7 @@ int Log::vsprintf(char *buf, const char *fmt, va_list args)
         case 'x':
             // 'x'表示用小写字母表示
             flags |= SMALL;
+            FALLTHROUGH;
         case 'X':
             str = number(str, va_arg(args, unsigned long), 16,
                          field_width, precision, flags);
@@ -350,9 +351,11 @@ int Log::vsprintf(char *buf, const char *fmt, va_list args)
 
         // 如果格式转换字符是'd', 'i' 或 'u'，则表示对应参数是整数
         case 'd':
+            FALLTHROUGH;
         case 'i':
             // 'd', 'i'代表符号整数，因此需要加上带符号标志
             flags |= SIGN;
+            FALLTHROUGH;
         // 'u'代表无符号整数
         case 'u':
             str = number(str, va_arg(args, unsigned long), 10,
