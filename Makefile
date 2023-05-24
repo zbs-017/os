@@ -5,8 +5,8 @@ BUILD = build
 ENTRY = 0x10000
 
 # 使用交叉编译器
-CC = /home/zbs/dennix-toolchain/bin/i686-dennix-g++
-LD = /home/zbs/dennix-toolchain/bin/i686-dennix-ld
+CC = /home/zbs/Src/dennix-toolchain/bin/i686-dennix-g++
+LD = /home/zbs/Src/dennix-toolchain/bin/i686-dennix-ld
 CRTBEGIN_O := $(shell $(CC) $(CXXFLAGS) -print-file-name=crtbegin.o)
 CRTEND_O := $(shell $(CC) $(CXXFLAGS) -print-file-name=crtend.o)
 START_OBJ := $(BUILD)/boot/crti.o $(CRTBEGIN_O)
@@ -55,8 +55,6 @@ QEMU = qemu-system-i386 \
 	-m 32M \
 	-boot c \
 	-drive file=$<,if=ide,index=0,media=disk,format=raw \
-	-audiodev pa,id=hda \
-	-machine pcspk-audiodev=hda \
 	-rtc base=localtime \
 
 all: $(BUILD)/master.img $(BUILD)/system.map
